@@ -14,6 +14,7 @@ The user decides at every step. The app drafts and records work; it never publis
 
 | Read for | Location |
 | --- | --- |
+| Stage 2 integration scope (MusicBrainz, Last.fm, Meta) | `docs/execution/SCOPE-STAGE2-INTEGRATIONS.md` |
 | Assignment, binding constraints, dependency exclusions | `docs/handoff/START-HERE.md`, `docs/handoff/AGENTS.md` |
 | Settled decisions and material gates | `docs/handoff/spec/DECISIONS.md` |
 | Product, journeys, UI contract | `docs/handoff/spec/PRODUCT.md`, `USER-FLOWS.md`, `UI-CONTRACT.md` |

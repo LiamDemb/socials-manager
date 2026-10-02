@@ -56,6 +56,10 @@ urlpatterns = [
     path("api/objects", api.object_create),
     path("api/objects/<uuid:object_id>", api.object_update),
     path("api/settings", api.settings_update),
+    path("api/peers/discover", api.peer_discover_lastfm),
+    path("api/peers/promote", api.peer_promote),
+    path("api/peers/reject", api.peer_reject),
+    path("api/musicbrainz/search", api.musicbrainz_search),
     path("api/backups", api.backup_now),
     re_path(r"^static/(?P<path>(css|js)/[A-Za-z0-9_.-]+)$", serve, {"document_root": settings.STATIC_ROOT_SOURCE}),
 ]

@@ -208,10 +208,17 @@ def settings_page(request):
 @require_GET
 def placeholder(request, section):
     if section == "peers":
-        from context.models import PeerProfile
+        from context.models import PeerCandidate, PeerProfile
 
-        peers = PeerProfile.objects.order_by("label")
-        return page(request, "web/peers.html", "peers", "Peers", peers=peers)
+        return page(
+            request,
+            "web/peers.html",
+            "peers",
+            "Peers",
+            peers=PeerProfile.objects.order_by("label"),
+            candidates=PeerCandidate.objects.filter(review_state="pending").order_by("-match_score", "name")[:50],
+            reviewed_count=PeerProfile.objects.filter(review_state="reviewed").count(),
+        )
     if section == "inspiration":
         from context.models import InspirationReference
 

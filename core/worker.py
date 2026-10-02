@@ -56,6 +56,7 @@ def schedule_due_jobs():
     enqueue("backup.daily", "instance", local_day)
     enqueue("cleanup.orphans", "imports", local_day)
     enqueue("collect.source", "instagram:graph_api", local_day)
+    enqueue("collect.source", "peers:business_discovery", local_day)
 
 
 def tick(worker_id):

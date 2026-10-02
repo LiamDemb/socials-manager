@@ -300,6 +300,56 @@ def settings_update(request, body, key):
 
 
 @api
+def peer_discover_lastfm(request, body, key):
+    from context.services import discover_lastfm_similar
+
+    artist = (body.get("artist") or "Opal Season").strip()
+    limit = min(int(body.get("limit") or 30), 50)
+
+    def run():
+        return discover_lastfm_similar(artist, limit=limit)
+
+    return idempotent(key, "peer.discover_lastfm", run)
+
+
+@api
+def peer_promote(request, body, key):
+    from context.services import promote_candidate
+
+    def run():
+        peer = promote_candidate(
+            body["candidate_id"],
+            instagram_username=body.get("instagram_username") or "",
+            musicbrainz_mbid=body.get("musicbrainz_mbid") or "",
+            notes=body.get("notes") or "",
+        )
+        return {"peer_id": str(peer.pk), "redirect": "/peers"}
+
+    return idempotent(key, "peer.promote", run)
+
+
+@api
+def peer_reject(request, body, key):
+    from context.services import reject_candidate
+
+    def run():
+        reject_candidate(body["candidate_id"], body.get("reason") or "")
+        return {"redirect": "/peers"}
+
+    return idempotent(key, "peer.reject", run)
+
+
+@api
+def musicbrainz_search(request, body, key):
+    from sources import musicbrainz
+
+    def run():
+        return musicbrainz.search_artists(body.get("artist", "").strip())
+
+    return idempotent(key, "musicbrainz.search", run)
+
+
+@api
 def backup_now(request, body, key):
     from core.backup import create_backup
 

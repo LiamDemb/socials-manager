@@ -1,13 +1,44 @@
 {% extends "web/base.html" %}
+{% block actions %}
+<form data-api="/api/peers/discover" data-after="reload" class="inline">
+  <button class="button" type="submit">Discover similar (Last.fm)</button>
+  <p class="form-error" role="alert"></p>
+</form>
+{% endblock %}
 {% block content %}
 <section class="section">
-  <h2 class="h3">Curated peers</h2>
-  <p class="meta">Peers are owner-reviewed identities. Public collection stays blocked until a permitted route is verified.</p>
+  <h2 class="h3">Curated peers ({{ reviewed_count }} / 50)</h2>
+  <p class="meta">Similarity is a discovery signal only. Confirm identity and relevance before promotion. Instagram handles are never inferred from names.</p>
   {% if peers %}
-  <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Name</th><th scope="col">Handle</th><th scope="col">Review</th><th scope="col">Collection</th></tr></thead>
-  <tbody>{% for p in peers %}<tr><td>{{ p.label }}</td><td>@{{ p.handle }}</td><td>{{ p.get_review_state_display }}</td><td>{{ p.capability.live_collection|default:"blocked" }}</td></tr>{% endfor %}</tbody></table></div>
+  <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Name</th><th scope="col">Instagram</th><th scope="col">MusicBrainz</th><th scope="col">Collection</th></tr></thead>
+  <tbody>{% for p in peers %}<tr>
+    <td>{{ p.label }}{% if p.review_state != "reviewed" %} <span class="badge tone-muted">{{ p.review_state }}</span>{% endif %}</td>
+    <td>{% if p.instagram_username %}@{{ p.instagram_username }}{% else %}<span class="meta">Not set</span>{% endif %}</td>
+    <td>{% if p.musicbrainz_artist_id %}<a href="https://musicbrainz.org/artist/{{ p.musicbrainz_artist_id }}" rel="noopener noreferrer" target="_blank">MBID</a>{% else %}<span class="meta">None</span>{% endif %}</td>
+    <td>{{ p.collection_health.state|default:"queued" }}</td>
+  </tr>{% endfor %}</tbody></table></div>
   {% else %}
-  <div class="empty"><h3>No peers yet</h3><p>Add peers after identity review. Live public-data collection is not enabled.</p></div>
+  <div class="empty"><h3>No curated peers yet</h3><p>Discover candidates below, then promote with a confirmed Instagram username.</p></div>
+  {% endif %}
+</section>
+<section class="section">
+  <h2 class="h3">Candidates</h2>
+  {% if candidates %}
+  <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Name</th><th scope="col">Match</th><th scope="col">Source</th><th scope="col">Actions</th></tr></thead>
+  <tbody>{% for c in candidates %}<tr>
+    <td>{{ c.name }}</td><td>{% if c.match_score %}{{ c.match_score|floatformat:2 }}{% else %}<span class="meta">n/a</span>{% endif %}</td><td>{{ c.source }}</td>
+    <td>
+      <form data-api="/api/peers/promote" data-after="reload" class="stack inline-form">
+        <input type="hidden" name="candidate_id" value="{{ c.pk }}">
+        <label>Instagram @ <input name="instagram_username" placeholder="required for collection" maxlength="80"></label>
+        <label>MusicBrainz MBID <input name="musicbrainz_mbid" value="{{ c.musicbrainz_mbid }}" maxlength="36"></label>
+        <button class="button" type="submit">Promote to peer</button>
+        <p class="form-error" role="alert"></p>
+      </form>
+    </td>
+  </tr>{% endfor %}</tbody></table></div>
+  {% else %}
+  <p class="meta">No pending candidates. Use Discover similar or import manually later.</p>
   {% endif %}
 </section>
 {% endblock %}

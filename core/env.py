@@ -2,6 +2,24 @@
 import os
 from pathlib import Path
 
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def load_project_env():
+    """Load `.env` from the repository root without overwriting existing environment variables."""
+    path = _REPO_ROOT / ".env"
+    if not path.is_file():
+        return
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip().strip("'").strip('"')
+        if key and key not in os.environ:
+            os.environ[key] = value
+
 LEGACY_DATA_ROOT = Path.home() / "Library" / "Application Support" / "BandEvidence"
 DEFAULT_DATA_ROOT = Path.home() / "Library" / "Application Support" / "SocialsManager"
 

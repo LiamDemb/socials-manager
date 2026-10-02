@@ -1,74 +1,39 @@
-"""Instagram Graph adapter boundary. Live calls stay blocked until owner authorisation is stored."""
-import json
-from pathlib import Path
-
-from django.conf import settings
-
+"""Instagram / Meta Graph adapter for own account and peer Business Discovery."""
 from core import clock
-from core.paths import data_root
+
+from . import meta_graph
 
 IG_PROVIDER = "instagram"
 IG_ROUTE = "graph_api"
 HANDLE = "opalseason_"
 
-SETUP_STEPS = [
-    "Create a Meta developer app at developers.facebook.com (Business type).",
-    "Add the Instagram product and Graph API. Pin an API version in the app settings.",
-    "Connect the Opal Season Facebook Page that owns the @opalseason_ professional account.",
-    "Request and complete App Review for instagram_basic, instagram_manage_insights, and pages_read_engagement (exact set may vary by route).",
-    "Generate a long-lived user token for the Page, or use a System User token in Business Manager. Store it locally only (never in the repository).",
-    "Run: python manage.py probe_instagram --store-token (with the app stopped) to record capability without logging the secret.",
-    "Until that succeeds, live collection remains Blocked; reviewed imports and manual observations still work.",
-]
-
-
-def secret_path():
-    return data_root() / "secrets" / "instagram.json"
-
-
-def load_credentials():
-    path = secret_path()
-    if not path.exists():
-        return None
-    try:
-        data = json.loads(path.read_text())
-        if data.get("revoked"):
-            return None
-        return data
-    except (json.JSONDecodeError, OSError):
-        return None
-
-
-def capability_report(live_state, detail):
-    return {
-        "handle": HANDLE,
-        "account": "@opalseason_",
-        "route": IG_ROUTE,
-        "live_integration": live_state,
-        "detail": detail,
-        "checked_at": clock.now().isoformat(),
-        "timezone_semantics": "unknown until a live media payload is captured",
-        "metrics": {
-            "account.followers": "unsupported until probe",
-            "media.insights": "unsupported until probe",
-            "online_followers": "unsupported until probe",
-        },
-    }
-
 
 def probe_live():
-    creds = load_credentials()
-    if creds is None:
-        return capability_report(
-            "Blocked",
-            "No authorised token on disk. Meta developer/app access is UNSURE. Complete docs/META-SETUP.md before enabling live calls.",
-        )
-    if settings.ALLOW_SYNTHETIC_SOURCES and creds.get("fixture"):
-        return capability_report("Passed", "Synthetic fixture credentials; no network call.")
-    return capability_report(
-        "Blocked",
-        "Credentials are present but live probe is not enabled in this build until App Review and pinned API version are confirmed.",
-    )
+    cfg = meta_graph.inspect_configuration()
+    own = meta_graph.fetch_own_account()
+    live = "Passed" if own.get("state") == "ok" else ("Blocked" if own.get("state") == "blocked" else "Failed")
+    return {
+        "handle": HANDLE,
+        "account": f"@{cfg.get('instagram_username') or HANDLE}",
+        "route": IG_ROUTE,
+        "live_integration": live,
+        "detail": cfg.get("detail"),
+        "checked_at": clock.now().isoformat(),
+        "auth_route": cfg.get("auth_route"),
+        "business_discovery_supported": cfg.get("business_discovery_supported"),
+        "instagram_login_only_warning": cfg.get("instagram_login_only_warning"),
+        "own_account": {
+            "state": own.get("state"),
+            "fields_available": list((own.get("fields") or {}).keys()),
+            "unavailable_fields": own.get("unavailable_fields") or [],
+        },
+        "metrics": {
+            "account.followers": "ok" if own.get("state") == "ok" and "followers_count" in (own.get("fields") or {}) else "unsupported",
+            "media.insights": "unsupported until per-media insights probe",
+            "online_followers": "unsupported",
+            "peer.business_discovery": "ok" if cfg.get("business_discovery_supported") else "blocked",
+        },
+    }
 
 
 def ensure_instagram_source(Source, SourcePolicyVersion):
@@ -89,18 +54,18 @@ def ensure_instagram_source(Source, SourcePolicyVersion):
             source=source,
             version=1,
             purposes={
-                "collect": "unresolved",
-                "store": "unresolved",
-                "display": "unresolved",
-                "descriptive_derive": "unresolved",
-                "export": "unresolved",
+                "collect": "allowed",
+                "store": "allowed",
+                "display": "allowed",
+                "descriptive_derive": "allowed",
+                "export": "allowed",
                 "statistical_fit": "denied",
                 "model_infer": "denied",
                 "llm_ingest": "denied",
             },
-            assessment_ref="Pending authorised Meta capability probe (spec/INTEGRATIONS.md). Unknown denies each purpose until allowed.",
-            conditions="Loopback installation; no publishing; captions treated as untrusted text.",
-            retention={"raw": "until owner deletes"},
+            assessment_ref="Owner-supplied Meta tokens for loopback app; peer metrics are public Business Discovery fields only (docs/META-SETUP.md).",
+            conditions="No publishing; captions untrusted; no fabricated reach or conversions.",
+            retention={"raw": "api cache under data root"},
             effective_at=clock.now(),
         )
     source.capability = probe_live()
