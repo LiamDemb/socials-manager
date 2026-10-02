@@ -1,8 +1,5 @@
-# Private handoff: real CSVs, derivative databases, nested original archives.
-# Normative copies live in docs/handoff/. Never force-add anything from here.
 /handoff/
 
-# Instance data roots, databases and backups (DATA_ROOT lives outside the repo by default)
 /data-root/
 /var/
 *.sqlite3
@@ -13,18 +10,15 @@
 *.db
 backups/
 
-# Private real-data fixtures and scratch verification output
 /fixtures-private/
 /.verify-tmp/
 
-# Secrets and local environment
 .env
 .env.*
 !.env.example
 *.secret
 secrets/
 
-# Python / tooling
 __pycache__/
 *.py[cod]
 .venv/
@@ -36,5 +30,4 @@ node_modules/
 playwright-report/
 test-results/
 
-# OS / editor
 .DS_Store
