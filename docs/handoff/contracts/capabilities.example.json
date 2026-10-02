@@ -1,0 +1,27 @@
+{
+  "fixture_class": "illustrative, not live verified",
+  "source": "Instagram own authorised professional account",
+  "route_version": "TO-BE-PINNED",
+  "capabilities": [
+    {
+      "metric": "online_followers",
+      "state": "unverified",
+      "basis": "Prior indexed documentation; no live payload/zone tested",
+      "required_before_use": [
+        "actual support",
+        "bucket shape",
+        "verified timezone",
+        "returned dimensions"
+      ]
+    },
+    {
+      "metric": "own media publication timestamp",
+      "state": "probe_required"
+    },
+    {
+      "metric": "peer private reach/streams/ticket conversion",
+      "state": "not_available_as_public_peer_data"
+    }
+  ],
+  "fallback": "Declared availability/campaign constraints when temporal evidence cannot be used"
+}

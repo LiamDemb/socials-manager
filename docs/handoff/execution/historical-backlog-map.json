@@ -1,0 +1,240 @@
+{
+  "purpose": "Coverage map, not execution of outdated tasks",
+  "mapping": [
+    {
+      "original_id": "F01",
+      "original_title": "Record source permissions and ownership",
+      "current_tasks": [
+        "S1-01",
+        "S1-02",
+        "S2-01",
+        "S4-04"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "F04",
+      "original_title": "Prove the required Spotify outcome path",
+      "current_tasks": [
+        "S1-03",
+        "S1-06"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "F02",
+      "original_title": "Probe band Instagram connection",
+      "current_tasks": [
+        "S2-01",
+        "S2-02"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "F03",
+      "original_title": "Probe peer monitoring",
+      "current_tasks": [
+        "S2-03"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "F05",
+      "original_title": "Audit local model package",
+      "current_tasks": [
+        "S3-04"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "F06",
+      "original_title": "Review one minimal task flow at a time",
+      "current_tasks": [
+        "S1-04",
+        "S4-01"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "D01",
+      "original_title": "Create private application foundation",
+      "current_tasks": [
+        "S1-01"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "D02",
+      "original_title": "Implement common evidence schema",
+      "current_tasks": [
+        "S1-02"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "M01",
+      "original_title": "Prepare early time-safe forecasting evidence",
+      "current_tasks": [
+        "S1-06"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "M02",
+      "original_title": "Validate outcome forecasts early against simple baselines",
+      "current_tasks": [
+        "S1-06",
+        "S4-03"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "D03",
+      "original_title": "Deliver staged import and reconciliation",
+      "current_tasks": [
+        "S1-03"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "D04",
+      "original_title": "Collect and backfill permitted Instagram data",
+      "current_tasks": [
+        "S2-02"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "D05",
+      "original_title": "Create goals and band action log",
+      "current_tasks": [
+        "S1-02",
+        "S1-04"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "D06",
+      "original_title": "Implement the approved minimal Today flow",
+      "current_tasks": [
+        "S1-05",
+        "S2-06"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "D07",
+      "original_title": "Prove operational recovery",
+      "current_tasks": [
+        "S1-05",
+        "S4-02"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "R01",
+      "original_title": "Create curated artist registry and review queue",
+      "current_tasks": [
+        "S2-03"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "R02",
+      "original_title": "Add permitted discovery adapters",
+      "current_tasks": [
+        "S2-03"
+      ],
+      "note": "Broad automated discovery is deferred; curated identity/reference lookup first"
+    },
+    {
+      "original_id": "R03",
+      "original_title": "Build explainable radar",
+      "current_tasks": [
+        "S2-03",
+        "S2-04"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "R04",
+      "original_title": "Add post context review",
+      "current_tasks": [
+        "S2-03"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "R05",
+      "original_title": "Benchmark local caption extraction",
+      "current_tasks": [
+        "S3-04"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "R06",
+      "original_title": "Enable local extraction worker",
+      "current_tasks": [
+        "S3-04"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "E01",
+      "original_title": "Define comparable evidence queries",
+      "current_tasks": [
+        "S2-04",
+        "S3-01"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "E02",
+      "original_title": "Ship evidence cards and weekly brief",
+      "current_tasks": [
+        "S2-04",
+        "S2-06"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "E03",
+      "original_title": "Deliver experiment lifecycle",
+      "current_tasks": [
+        "S3-05"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "E04",
+      "original_title": "Validate usability end to end",
+      "current_tasks": [
+        "S4-01",
+        "S4-05"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "M03",
+      "original_title": "Release calibrated estimates",
+      "current_tasks": [
+        "S4-03",
+        "S4-04"
+      ],
+      "note": "Scope and authority updated by spec/DECISIONS.md"
+    },
+    {
+      "original_id": "L01",
+      "original_title": "Evaluate licensed paid enrichment",
+      "current_tasks": [],
+      "note": "Optional/deferred; no paid enrichment or multimedia scope added"
+    },
+    {
+      "original_id": "L02",
+      "original_title": "Add richer media and more sources",
+      "current_tasks": [],
+      "note": "Optional/deferred; no paid enrichment or multimedia scope added"
+    }
+  ]
+}

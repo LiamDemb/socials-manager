@@ -1,0 +1,448 @@
+{
+  "version": "1.0",
+  "authority": "Current handoff; archived 28-story backlog is mapped, not active task ordering",
+  "stages": [
+    {
+      "id": 1,
+      "title": "Durable real-data execution loop",
+      "owner_review": "one consolidated review after automated gate; dependent external gates stay explicit"
+    },
+    {
+      "id": 2,
+      "title": "Live sources and trustworthy evidence",
+      "owner_review": "one consolidated review after automated gate; dependent external gates stay explicit"
+    },
+    {
+      "id": 3,
+      "title": "Evidence-backed campaign generation and adaptation",
+      "owner_review": "one consolidated review after automated gate; dependent external gates stay explicit"
+    },
+    {
+      "id": 4,
+      "title": "Release qualification and validated learning",
+      "owner_review": "one consolidated review after automated gate; dependent external gates stay explicit"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "S1-01",
+      "stage": 1,
+      "title": "Audited application and persistent local root",
+      "depends_on": [],
+      "acceptance_cases": [
+        "AC11",
+        "AC35"
+      ],
+      "deliverable": "Repository, stack/access ADR, dependency inventory, migrations/launcher/config and isolation.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S1-02",
+      "stage": 1,
+      "title": "Canonical catalogue, sources and metric/outcome schema",
+      "depends_on": [
+        "S1-01"
+      ],
+      "acceptance_cases": [
+        "AC05",
+        "AC06",
+        "AC07"
+      ],
+      "deliverable": "Versioned identities, source policies, observations, outcomes and relationship invariants.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S1-03",
+      "stage": 1,
+      "title": "Reviewed real Spotify importer and exports",
+      "depends_on": [
+        "S1-02"
+      ],
+      "acceptance_cases": [
+        "AC01",
+        "AC02",
+        "AC03",
+        "AC04",
+        "AC10"
+      ],
+      "deliverable": "Preview/resolve/commit/undo uploader with exact supplied fixtures and provenance.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S1-04",
+      "stage": 1,
+      "title": "Campaign UI, dialog primitive and calendar execution",
+      "depends_on": [
+        "S1-02"
+      ],
+      "acceptance_cases": [
+        "AC06",
+        "AC08",
+        "AC09",
+        "AC12",
+        "AC13"
+      ],
+      "deliverable": "Three campaign types, manual/operational dated work, typed navigation and real persistence.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S1-05",
+      "stage": 1,
+      "title": "Outcome dashboard and recovery",
+      "depends_on": [
+        "S1-03",
+        "S1-04"
+      ],
+      "acceptance_cases": [
+        "AC07",
+        "AC09",
+        "AC11",
+        "AC35"
+      ],
+      "deliverable": "Real compatible progress/coverage, Today basics, backup/restore smoke and restart.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S1-06",
+      "stage": 1,
+      "title": "Early time-safe evaluation scaffolding",
+      "depends_on": [
+        "S1-03"
+      ],
+      "acceptance_cases": [
+        "AC30"
+      ],
+      "deliverable": "Dataset manifest, availability/prospective ledger, synthetic baselines/splits and precise source-use gate.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S2-01",
+      "stage": 2,
+      "title": "Authorised Meta route and capability probe",
+      "depends_on": [
+        "S1-02"
+      ],
+      "acceptance_cases": [
+        "AC14",
+        "AC18",
+        "AC26"
+      ],
+      "deliverable": "Real account/API/metric/timezone report; pending credentials leave live status Blocked.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S2-02",
+      "stage": 2,
+      "title": "Idempotent collector and source health",
+      "depends_on": [
+        "S2-01",
+        "S1-03"
+      ],
+      "acceptance_cases": [
+        "AC15",
+        "AC27",
+        "AC29"
+      ],
+      "deliverable": "Leased jobs, pagination/snapshots/retries/retention/recovery with real supported data.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S2-03",
+      "stage": 2,
+      "title": "Reviewed context and curated peers",
+      "depends_on": [
+        "S1-04"
+      ],
+      "acceptance_cases": [
+        "AC17",
+        "AC19",
+        "AC26"
+      ],
+      "deliverable": "Conservative rules/identity review, versioned cohort and allowed public data path.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S2-04",
+      "stage": 2,
+      "title": "Reproducible findings, observation drill-down and timing",
+      "depends_on": [
+        "S2-02",
+        "S2-03"
+      ],
+      "acceptance_cases": [
+        "AC16",
+        "AC18",
+        "AC28"
+      ],
+      "deliverable": "Eligible bundles/coarse window comparisons and stable Evidence tabs/source navigation.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S2-05",
+      "stage": 2,
+      "title": "Contextual inspiration and scoped reports",
+      "depends_on": [
+        "S2-03",
+        "S1-05"
+      ],
+      "acceptance_cases": [
+        "AC19",
+        "AC20",
+        "AC28"
+      ],
+      "deliverable": "Global/contextual reference attach, presave/ticket reviewed contracts/manual observations.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S2-06",
+      "stage": 2,
+      "title": "Artist-wide dashboard and source acceptance",
+      "depends_on": [
+        "S2-04",
+        "S2-05"
+      ],
+      "acceptance_cases": [
+        "AC27",
+        "AC29",
+        "AC31"
+      ],
+      "deliverable": "Real trend/freshness/due alerts and sanitised source health/live proof.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S3-01",
+      "stage": 3,
+      "title": "Evidence-backed candidate selection and support",
+      "depends_on": [
+        "S2-04",
+        "S2-05",
+        "S1-06"
+      ],
+      "acceptance_cases": [
+        "AC16",
+        "AC21",
+        "AC26"
+      ],
+      "deliverable": "Versioned candidate catalogue/eligibility/ranking, explicit transfer limits and abstention.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S3-02",
+      "stage": 3,
+      "title": "Shared capacity and temporal scheduler",
+      "depends_on": [
+        "S3-01"
+      ],
+      "acceptance_cases": [
+        "AC18",
+        "AC22"
+      ],
+      "deliverable": "Constrained dates/time/zone, SchedulingDecision, conservative fallbacks and manual overrides.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S3-03",
+      "stage": 3,
+      "title": "Creation review, practical briefs and approvals",
+      "depends_on": [
+        "S3-02",
+        "S1-04"
+      ],
+      "acceptance_cases": [
+        "AC10",
+        "AC13",
+        "AC21",
+        "AC22",
+        "AC23"
+      ],
+      "deliverable": "Release/growth/show generated draft, concise review, Why/Timing/source and atomic selected acceptance.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S3-04",
+      "stage": 3,
+      "title": "Audited local semantic and synthesis adapter",
+      "depends_on": [
+        "S2-03",
+        "S3-01"
+      ],
+      "acceptance_cases": [
+        "AC26",
+        "AC32"
+      ],
+      "deliverable": "Model/runner inventory, frozen permitted benchmark, schema/policy validation and fallback; enable only passing tasks.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S3-05",
+      "stage": 3,
+      "title": "Experiment lifecycle and reviewed adaptations",
+      "depends_on": [
+        "S3-03"
+      ],
+      "acceptance_cases": [
+        "AC23",
+        "AC24"
+      ],
+      "deliverable": "Frozen protocols, mature outcome review, invalidation/event proposals, fingerprints and diff decisions.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S3-06",
+      "stage": 3,
+      "title": "Grounded Ask and full creative walkthrough",
+      "depends_on": [
+        "S3-03",
+        "S3-04"
+      ],
+      "acceptance_cases": [
+        "AC21",
+        "AC25",
+        "AC33"
+      ],
+      "deliverable": "Evidence-limited assistant, proposed edits, no tools/publication; three-scenario owner review.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S4-01",
+      "stage": 4,
+      "title": "Full browser/accessibility and state qualification",
+      "depends_on": [
+        "S3-05",
+        "S3-06",
+        "S2-06"
+      ],
+      "acceptance_cases": [
+        "AC12",
+        "AC13",
+        "AC25"
+      ],
+      "deliverable": "Actual geometry/focus/keyboard/zoom/longtext/error matrix for all screens.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S4-02",
+      "stage": 4,
+      "title": "Operations, deletion, migration and concurrency qualification",
+      "depends_on": [
+        "S3-05",
+        "S2-02"
+      ],
+      "acceptance_cases": [
+        "AC04",
+        "AC10",
+        "AC11",
+        "AC15",
+        "AC27",
+        "AC29",
+        "AC35"
+      ],
+      "deliverable": "File DB race/recovery/backup/restore/upgrade/deletion and sanitised diagnostics.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S4-03",
+      "stage": 4,
+      "title": "Numerical forecast evaluation or explicit readiness report",
+      "depends_on": [
+        "S1-06",
+        "S2-04"
+      ],
+      "acceptance_cases": [
+        "AC30",
+        "AC34"
+      ],
+      "deliverable": "Real candidate evaluation only after rights/history gate; otherwise preserved Blocked/Insufficient status and report.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S4-04",
+      "stage": 4,
+      "title": "Live connector and model release inventory",
+      "depends_on": [
+        "S4-01",
+        "S4-02",
+        "S4-03"
+      ],
+      "acceptance_cases": [
+        "AC14",
+        "AC20",
+        "AC26",
+        "AC32",
+        "AC34"
+      ],
+      "deliverable": "Runtime/capability/purpose/dependency/model evidence with enabled/disabled capabilities accurately declared.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    },
+    {
+      "id": "S4-05",
+      "stage": 4,
+      "title": "Release package and owner acceptance",
+      "depends_on": [
+        "S4-04"
+      ],
+      "acceptance_cases": [
+        "AC01",
+        "AC02",
+        "AC03",
+        "AC04",
+        "AC05",
+        "AC06",
+        "AC07",
+        "AC08",
+        "AC09",
+        "AC10",
+        "AC11",
+        "AC12",
+        "AC13",
+        "AC14",
+        "AC15",
+        "AC16",
+        "AC17",
+        "AC18",
+        "AC19",
+        "AC20",
+        "AC21",
+        "AC22",
+        "AC23",
+        "AC24",
+        "AC25",
+        "AC26",
+        "AC27",
+        "AC28",
+        "AC29",
+        "AC30",
+        "AC31",
+        "AC32",
+        "AC33",
+        "AC34",
+        "AC35"
+      ],
+      "deliverable": "Pinned build, install/update/rollback/backup docs, full acceptance report and concrete final owner review.",
+      "status": "not_started",
+      "continue_independent_work_when_blocked": true
+    }
+  ]
+}

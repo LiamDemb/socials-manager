@@ -1,0 +1,321 @@
+{
+  "version": "1.0",
+  "status": "target acceptance, not already passed",
+  "cases": [
+    {
+      "id": "AC01",
+      "first_stage": 1,
+      "title": "Exact real CSV ingestion and round trip",
+      "test_layer": "integration",
+      "fixture": "real supplied CSVs",
+      "exercise": "Import both and export source/common shapes; assert exact rows/values, 200 stream totals per separate scope, 25 saves, 15 playlist adds, latest followers22, monthly94/active94/super1.",
+      "expected": "2004 rows and 9018 metrics, exact dates/values, no artist+recording double count"
+    },
+    {
+      "id": "AC02",
+      "first_stage": 1,
+      "title": "Replay, rename, overlap and conflict revisions",
+      "test_layer": "database",
+      "fixture": "real plus isolated synthetic revision",
+      "exercise": "Repeat and rename import, add overlapping/new day, preview corrected value; reject unapproved conflict then explicitly approve revision.",
+      "expected": "No duplicate facts; atomic rollback; immutable approved correction; original bytes unchanged"
+    },
+    {
+      "id": "AC03",
+      "first_stage": 1,
+      "title": "Invalid and stale import protection",
+      "test_layer": "database",
+      "fixture": "synthetic",
+      "exercise": "Wrong header, blank/negative/fractional/oversize count, duplicate/invalid date, stale mapping/policy/preview and failed commit.",
+      "expected": "No invalid/partial facts; actionable errors; failed preview cannot commit"
+    },
+    {
+      "id": "AC04",
+      "first_stage": 1,
+      "title": "Import contribution undo",
+      "test_layer": "database",
+      "fixture": "synthetic",
+      "exercise": "Two imports independently support same value, undo each in sequence; then undo a revision batch.",
+      "expected": "Surviving contribution retained, active version reconciled, only affected evidence invalidated"
+    },
+    {
+      "id": "AC05",
+      "first_stage": 1,
+      "title": "Identity and object relationships",
+      "test_layer": "service",
+      "fixture": "real/provisional plus synthetic",
+      "exercise": "Map artist and provisional recording; verify explicit track/date; release membership and wrong event/recording link.",
+      "expected": "Filename is not identity, unresolved mapping visible, scope mismatch rejected"
+    },
+    {
+      "id": "AC06",
+      "first_stage": 1,
+      "title": "Campaign-first outcomes and deduplication",
+      "test_layer": "end_to_end",
+      "fixture": "synthetic",
+      "exercise": "Create release/growth/show; link shared account outcome to two campaigns; inspect aggregate report.",
+      "expected": "One outcome contract and one activity identity, counted once, no causal campaign attribution"
+    },
+    {
+      "id": "AC07",
+      "first_stage": 1,
+      "title": "Metric algebra and coverage",
+      "test_layer": "rules",
+      "fixture": "real plus synthetic",
+      "exercise": "Flow/stock/cumulative/unique/nested/ratio cases; missing baseline/dates, partial windows, refunds.",
+      "expected": "Compatible sums/latest/differences only, null differs from zero, Unknown/Partial visible"
+    },
+    {
+      "id": "AC08",
+      "first_stage": 1,
+      "title": "Execution clock and terminal states",
+      "test_layer": "rules",
+      "fixture": "frozen clocks",
+      "exercise": "5pm before/after, all-day midnight, future complete, skip/cancel reason, reopen, paused campaign.",
+      "expected": "Correct derived states, actual separate, immutable execution history, no future completion"
+    },
+    {
+      "id": "AC09",
+      "first_stage": 1,
+      "title": "Completion versus outcome",
+      "test_layer": "end_to_end",
+      "fixture": "synthetic",
+      "exercise": "Complete activity, then ingest a real scoped result and refresh outcome.",
+      "expected": "Completion alone changes no metrics; compatible observation updates progress"
+    },
+    {
+      "id": "AC10",
+      "first_stage": 1,
+      "title": "Optimistic revision and idempotent mutations",
+      "test_layer": "database",
+      "fixture": "file SQLite and two connections",
+      "exercise": "Double approval/commit/execution and concurrent stale requests.",
+      "expected": "One atomic result, stale write rejected, no lost edit or double count"
+    },
+    {
+      "id": "AC11",
+      "first_stage": 1,
+      "title": "Local persistence and restart",
+      "test_layer": "operations",
+      "fixture": "temporary persistent root",
+      "exercise": "Save campaign/import/decision, restart app/worker, reload UI; keep unsaved draft separate.",
+      "expected": "Committed state survives, no seeded fictional metrics, client is not second truth"
+    },
+    {
+      "id": "AC12",
+      "first_stage": 1,
+      "title": "Fixed Evidence tabs",
+      "test_layer": "browser",
+      "fixture": "synthetic long/empty states",
+      "exercise": "Switch Findings/data/review, drill into observation/source, Back/browser history.",
+      "expected": "One stable tablist/order/URLs; filters/selection preserved; no alternate taxonomy"
+    },
+    {
+      "id": "AC13",
+      "first_stage": 1,
+      "title": "Nested dialog navigation",
+      "test_layer": "browser",
+      "fixture": "synthetic edits/long content",
+      "exercise": "Activity→Why→source→Back; enter unsaved values, expand details, scroll; save mutation then return.",
+      "expected": "Conventional top back nav; draft/scroll/focus restored; mutated domain state re-fetched"
+    },
+    {
+      "id": "AC14",
+      "first_stage": 2,
+      "title": "Own Meta capability proof",
+      "test_layer": "live_integration",
+      "fixture": "authorised real account",
+      "exercise": "Pin route/API/scopes/account; fetch media/metrics twice; inspect timestamps and optional availability buckets.",
+      "expected": "Sanitised capability report, actual supported fields/coverage/zone; unavailable is not a pass"
+    },
+    {
+      "id": "AC15",
+      "first_stage": 2,
+      "title": "Collector error and cursor recovery",
+      "test_layer": "adapter_database",
+      "fixture": "mock provider plus live read smoke",
+      "exercise": "Pagination, partial permission,429/retry, expired/revoked token, schema change, deletion, crash/replay.",
+      "expected": "No duplicated/lost committed cursor, safe backoff/health/leases, gaps not invented"
+    },
+    {
+      "id": "AC16",
+      "first_stage": 2,
+      "title": "Comparable evidence and source lineage",
+      "test_layer": "service",
+      "fixture": "synthetic plus permitted actual observations",
+      "exercise": "Same metric/age/context/source; reject public reach/private stream substitution, future cutoff, restricted inputs.",
+      "expected": "Reproducible finding resolves exact versions/row/source/purpose and reports sample/limits"
+    },
+    {
+      "id": "AC17",
+      "first_stage": 2,
+      "title": "Reviewed context and identity invalidation",
+      "test_layer": "end_to_end",
+      "fixture": "permitted captions plus synthetic ambiguous cases",
+      "exercise": "Confirm/correct/leave unknown multilabel/context/entity; exclude peer after a draft exists.",
+      "expected": "Raw text unchanged, versions added, affected proposals stale, approved work not silently removed"
+    },
+    {
+      "id": "AC18",
+      "first_stage": 2,
+      "title": "Temporal data limitations",
+      "test_layer": "rules_adapter",
+      "fixture": "synthetic and actual shape if supported",
+      "exercise": "Unknown offset, hourly-only bucket, unrelated demographics, lifetime vs7day, real publication vs planned.",
+      "expected": "No guessed timezone/day matrix/segment join; no false comparable-age results"
+    },
+    {
+      "id": "AC19",
+      "first_stage": 2,
+      "title": "Peer relevance and inspiration",
+      "test_layer": "end_to_end",
+      "fixture": "curated permitted and synthetic fixtures",
+      "exercise": "Verify/pin/include/exclude peer; filter reference by purpose/phase/format; attach/save idempotently.",
+      "expected": "Unresolved/excluded peer not recommended, public/private limits visible, preference not outcome"
+    },
+    {
+      "id": "AC20",
+      "first_stage": 2,
+      "title": "Pre-save and ticket scope/reporting",
+      "test_layer": "adapter_rules",
+      "fixture": "reviewed provider/manual report",
+      "exercise": "Map release/event, click vs presave vssave, net tickets/refunds, cumulative snapshots repeated.",
+      "expected": "Source needed when absent, no fabricated automatic provider, snapshots not summed"
+    },
+    {
+      "id": "AC21",
+      "first_stage": 3,
+      "title": "Evidence-backed generation and abstention",
+      "test_layer": "service_end_to_end",
+      "fixture": "synthetic eligible/missing/restricted bundles",
+      "exercise": "Release/growth/show draft, no evidence, unavailable assets/channels/list, restricted bundle and fabricated citation.",
+      "expected": "Only eligible supported tactics or explicit operational/manual work, no invented evidence"
+    },
+    {
+      "id": "AC22",
+      "first_stage": 3,
+      "title": "Constrained explainable scheduling",
+      "test_layer": "rules_end_to_end",
+      "fixture": "synthetic compatible timing",
+      "exercise": "Harddates,phase,assets,blackout,shared labour/content caps,DST; manual time edit; new timing data.",
+      "expected": "Feasible reproducible window/rationale or fallback; approved times fixed; protocol flagged on edit"
+    },
+    {
+      "id": "AC23",
+      "first_stage": 3,
+      "title": "Proposal review, diff and adaptation",
+      "test_layer": "database_end_to_end",
+      "fixture": "synthetic actual-result events",
+      "exercise": "New mature result/missed work/constraints → diff; accept/modify/reject; retry and stale snapshot.",
+      "expected": "User decision only, atomic revision-checked apply, no silent change or duplicate churn"
+    },
+    {
+      "id": "AC24",
+      "first_stage": 3,
+      "title": "Experiment lifecycle and learning",
+      "test_layer": "end_to_end",
+      "fixture": "synthetic measured/immature/confounded",
+      "exercise": "Draft/approve/run linked activities, move test, await compatible window, inconclusive review.",
+      "expected": "Frozen protocol/version, no duplicate work, no immature or causal claim; learning/prefs distinct"
+    },
+    {
+      "id": "AC25",
+      "first_stage": 4,
+      "title": "Rendered responsive accessibility",
+      "test_layer": "browser_manual",
+      "fixture": "long text and production UI",
+      "exercise": "360x640,768x1024,1440x900,812x375;200%zoom;5000-character text;keyboard/dialogs/calendar/errors.",
+      "expected": "No overlap/hidden actions; body scroll/focus/back usable; labelled states without colour; no mock-DOM substitute"
+    },
+    {
+      "id": "AC26",
+      "first_stage": 2,
+      "title": "Source purpose enforcement",
+      "test_layer": "service",
+      "fixture": "purpose-denied fixtures",
+      "exercise": "Denied/unresolved collect/store/derive/infer/fit/LLM/export plus derived summary/embedding.",
+      "expected": "Affected operation denied transitively; no policy laundering; unaffected functions work"
+    },
+    {
+      "id": "AC27",
+      "first_stage": 2,
+      "title": "Deletion and revocation",
+      "test_layer": "operations_database",
+      "fixture": "synthetic source graph",
+      "exercise": "Delete/revoke source, jobs/bundles/datasets/cache/model report and backup restore reconciliation.",
+      "expected": "Required content purged, dependents invalidated, permitted tombstones only, no resurrection"
+    },
+    {
+      "id": "AC28",
+      "first_stage": 2,
+      "title": "External source traceability",
+      "test_layer": "end_to_end",
+      "fixture": "primary metadata fixtures",
+      "exercise": "Drill to name/URL,unknown publication date,retrieval/extracted influence; compare capability doc vs effect evidence.",
+      "expected": "Traceable source, unknown date preserved, documentation does not inflate tactic support"
+    },
+    {
+      "id": "AC29",
+      "first_stage": 2,
+      "title": "Offline/wake source health",
+      "test_layer": "operations",
+      "fixture": "mock clock/process",
+      "exercise": "Sleep/missed slots/offline inference/source failure and restart leases.",
+      "expected": "Freshness/gaps visible, collection recovery safe, no fabricated flat trend"
+    },
+    {
+      "id": "AC30",
+      "first_stage": 1,
+      "title": "Early evaluation ledger without invalid training",
+      "test_layer": "evaluation",
+      "fixture": "original synthetic only while gate blocked",
+      "exercise": "Freeze cutoff/split/version manifest, store prospective forecast before actual, reject future features.",
+      "expected": "Correct as-of mechanics/baselines, Spotify use/history gates explicit, no claim of trained real model"
+    },
+    {
+      "id": "AC31",
+      "first_stage": 2,
+      "title": "Daily dashboard scope and freshness",
+      "test_layer": "end_to_end",
+      "fixture": "synthetic plus actual own data",
+      "exercise": "Today aggregate campaigns/outcomes,trendwindow,alerts with source stale/unknown and paused plans.",
+      "expected": "Artist-wide labelled context, deduped outcomes, named drill-down, correct missing/gap state"
+    },
+    {
+      "id": "AC32",
+      "first_stage": 3,
+      "title": "Audited semantic/synthesis benchmark",
+      "test_layer": "model_evaluation",
+      "fixture": "permitted heldout labelled dataset",
+      "exercise": "Rules vs approved local candidate,validschema/spans/citations,abstention,prompt injection,resources,offline.",
+      "expected": "Inventory/licence/hash, task thresholds frozen; no accepted invented entity/source/policy bypass; failure fallback"
+    },
+    {
+      "id": "AC33",
+      "first_stage": 3,
+      "title": "Grounded Ask and edit safety",
+      "test_layer": "end_to_end_model",
+      "fixture": "permitted context and adversarial fixtures",
+      "exercise": "Scoped question,reset scope,unknown evidence,source citations,requested edit and injected caption.",
+      "expected": "Grounded reply or abstain; only uncommitted validated proposals; no tools/publish/secrets/policy bypass"
+    },
+    {
+      "id": "AC34",
+      "first_stage": 4,
+      "title": "Numerical forecast release gate",
+      "test_layer": "evaluation",
+      "fixture": "permitted adequate real history or explicitly blocked",
+      "exercise": "Predeclare criteria,rolling development,untouched final holdout,naivebaseline,coverage/bias and prospective scoring.",
+      "expected": "Reproducible model artifact/report only when allowed/adequate/useful; otherwise Blocked/Insufficient, no causal lift"
+    },
+    {
+      "id": "AC35",
+      "first_stage": 1,
+      "title": "Backup, upgrade and local boundary",
+      "test_layer": "operations_security",
+      "fixture": "real temp SQLite snapshot/files",
+      "exercise": "Verify runtime beforeWAL, consistent backup/restore/hash/foreignkeys, migration rollback,loopback/CSRF/uploads/logs.",
+      "expected": "Restorable matching data/files, safe migration, no public no-login exposure or secrets; repeated at release"
+    }
+  ]
+}

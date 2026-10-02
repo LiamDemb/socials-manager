@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-10-01",
+  "purpose": "Traceable capability/governance research, not campaign-effect evidence",
+  "sources": [
+    {
+      "id": "SRC01",
+      "name": "SQLite appropriate uses",
+      "url": "https://www.sqlite.org/whentouse.html",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "Local/low write-concurrency embedded storage fits this instance. Keep database access local to its application server.",
+      "influence": "SQLite choice, persistent data root",
+      "limits": "No load benchmark performed."
+    },
+    {
+      "id": "SRC02",
+      "name": "SQLite WAL",
+      "url": "https://www.sqlite.org/wal.html",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "WAL keeps processes on one host/local filesystem. Official page documents WAL-reset fix in3.51.3 or later and selected backports3.44.6/3.50.7.",
+      "influence": "Runtime gate before WAL, conservative rollback journal fallback",
+      "limits": "Future runtime must be checked; Python version alone is insufficient."
+    },
+    {
+      "id": "SRC03",
+      "name": "SQLite backup API",
+      "url": "https://www.sqlite.org/backup.html",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "Consistent database snapshot API is preferable to copying only a live WAL main file.",
+      "influence": "Backup/restore design",
+      "limits": "Asset/raw-file snapshot consistency needs application coordination."
+    },
+    {
+      "id": "SRC04",
+      "name": "SQLite copyright",
+      "url": "https://www.sqlite.org/copyright.html",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "SQLite source is public domain; provenance still includes the selected distribution/build.",
+      "influence": "Bounded POC dependency inventory",
+      "limits": "Does not certify future runtime/driver distribution."
+    },
+    {
+      "id": "SRC05",
+      "name": "Django databases",
+      "url": "https://docs.djangoproject.com/en/stable/ref/databases/",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page_redirected_6.1",
+      "extracted_information": "Django supports SQLite; concurrency/locking differences require explicit conditional writes and short transactions.",
+      "influence": "Recommended monolith implementation, no PostgreSQL row-lock assumptions",
+      "limits": "stable URL is a moving documentation target, not a pinned version or ownership audit."
+    },
+    {
+      "id": "SRC06",
+      "name": "Django CSRF",
+      "url": "https://docs.djangoproject.com/en/stable/ref/csrf/",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page_redirected_6.1",
+      "extracted_information": "Same-origin browser mutations need CSRF protection independently of app-account scope.",
+      "influence": "Local no-login safe writes",
+      "limits": "No production security test performed."
+    },
+    {
+      "id": "SRC07",
+      "name": "Python Software Foundation",
+      "url": "https://www.python.org/psf/about/",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "Primary governance reference for Python.",
+      "influence": "Standard-library POC provenance",
+      "limits": "Future dependencies/build artifacts require separate audit."
+    },
+    {
+      "id": "SRC08",
+      "name": "Spotify exporting data",
+      "url": "https://support.spotify.com/us/artists/article/exporting-data/",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "Official support documents song stream and Audience timeline CSV export.",
+      "influence": "Required CSV transport contract",
+      "limits": "No automatic export/login tested; owner supplied real files."
+    },
+    {
+      "id": "SRC09",
+      "name": "Spotify stats update and UTC",
+      "url": "https://support.spotify.com/us/artists/article/when-stats-update/",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "Spotify for Artists daily stats are UTC-day based.",
+      "influence": "Preserve source-day grain; do not reconstruct local aggregate days",
+      "limits": "No real-time feed connected."
+    },
+    {
+      "id": "SRC10",
+      "name": "Spotify Developer Policy",
+      "url": "https://developer.spotify.com/policy",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "SectionsIII.13-14 restrict analytics and ML/AI training/ingestion on Platform/Content.",
+      "influence": "Do not use Web API as an analytics/model shortcut",
+      "limits": "Artists exports need route-specific applicable assessment, not blanket conflation."
+    },
+    {
+      "id": "SRC11",
+      "name": "Australian Artists terms",
+      "url": "https://www.spotify.com/au/legal/spotify-for-artists-terms-and-conditions/",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "Artist-service terms support industry analytics context and incorporate applicable conditions/guidelines.",
+      "influence": "Separate Artists-export route assessment",
+      "limits": "Not a specific grant for this proposed model use."
+    },
+    {
+      "id": "SRC12",
+      "name": "Australian User Guidelines",
+      "url": "https://www.spotify.com/au/legal/user-guidelines/",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "Item5 contains automated collection and model training/ingestion restrictions.",
+      "influence": "Affected Spotify fitting/LLM use stays gated",
+      "limits": "Internal/non-selling use is not an established exception; exact own-band numerical use unresolved."
+    },
+    {
+      "id": "SRC13",
+      "name": "Spotify Countdown Pages",
+      "url": "https://support.spotify.com/us/artists/article/getting-started-with-countdown-pages-on-spotify/",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "Eligible new albums/EPs, not singles; scoped presave analytics described.",
+      "influence": "Separate confirmed presaves from saves/clicks; provider required for single",
+      "limits": "Check eligibility at implementation; no provider/API selected or tested."
+    },
+    {
+      "id": "SRC14",
+      "name": "Instagram Account Insights",
+      "url": "https://developers.facebook.com/documentation/instagram-platform/api-reference/instagram-user/insights",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "prior_indexed_excerpt_only_current_open_unavailable",
+      "extracted_information": "Previous official indexed excerpt documented optional online_followers last30days.",
+      "influence": "Optional availability adapter probe, not guaranteed scheduling input",
+      "limits": "Full page rate limited/unavailable; exact account/route/buckets/timezone/live support unverified."
+    },
+    {
+      "id": "SRC15",
+      "name": "Meta official Instagram API collection",
+      "url": "https://www.postman.com/meta/instagram/documentation/6yqw8pt/instagram-api",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "primary_collection_dynamic_body_incomplete",
+      "extracted_information": "Official collection is a professional-account API/insights route reference.",
+      "influence": "Authorised own account capability probe",
+      "limits": "Not a live permission result; route-specific scopes/fields must be verified."
+    },
+    {
+      "id": "SRC16",
+      "name": "Instagram media reference",
+      "url": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "verification_target_prior_fetch_rate_limited",
+      "extracted_information": "Reference target for publication timestamp/media identity.",
+      "influence": "Probe actual publication/format metadata",
+      "limits": "Not verified field/API payload in this handoff."
+    },
+    {
+      "id": "SRC17",
+      "name": "Instagram media insights",
+      "url": "https://developers.facebook.com/docs/instagram-platform/reference/instagram-media/insights",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "verification_target_prior_fetch_rate_limited",
+      "extracted_information": "Reference target for current per-format own-account metrics.",
+      "influence": "Versioned capability registry and common-age snapshots",
+      "limits": "Do not copy deprecated metric/breakdown lists."
+    },
+    {
+      "id": "SRC18",
+      "name": "MusicBrainz API",
+      "url": "https://musicbrainz.org/doc/MusicBrainz_API",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "full_primary_page",
+      "extracted_information": "Canonical identity/release relationship API reference.",
+      "influence": "Bounded later identity lookup; preserve disambiguation and explicit mapping",
+      "limits": "No production adapter, licence/use-rate or identity test completed."
+    },
+    {
+      "id": "SRC19",
+      "name": "YouTube Shorts",
+      "url": "https://support.google.com/youtube/answer/10059070?hl=en-on",
+      "checked_at": "2026-10-01",
+      "retrieval_status": "retained_primary_research_from_v3",
+      "extracted_information": "Official short-video format reference.",
+      "influence": "Distinct Shorts planning format",
+      "limits": "Format support is not effect evidence or a connected analytics API."
+    },
+    {
+      "id": "SRC20",
+      "name": "Inter official source",
+      "url": "https://rsms.me/inter/",
+      "checked_at": "2026-09-30",
+      "retrieval_status": "retained_primary_asset_reference",
+      "extracted_information": "Official font source, SIL Open Font License1.1 as recorded in UX benchmark.",
+      "influence": "Keep typography/local bundle or system fallback",
+      "limits": "Current prototype uses external official stylesheet; future local distribution audited."
+    },
+    {
+      "id": "SRC21",
+      "name": "Spotify audience segments",
+      "url": "https://support.spotify.com/us/artists/article/audience-segments-on-spotify/",
+      "checked_at": "2026-09-30",
+      "retrieval_status": "retained_primary_research_from_import",
+      "extracted_information": "Rolling28day and nested audience segment semantics.",
+      "influence": "Latest snapshot, no nested/unique sum",
+      "limits": "Real file values are fixture evidence, not current provider totals."
+    }
+  ]
+}

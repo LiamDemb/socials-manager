@@ -1,0 +1,85 @@
+{
+  "recovered_on": "2026-10-01",
+  "artifacts": [
+    {
+      "id": "original_vision",
+      "path": "archive/ORIGINAL-VISION.md",
+      "native_origin_id": "libfile_165bba4976a8819183612fd8db90492d",
+      "sha256": "e68211dddad027576b85920deca4df02d64e5f8696fe76f0ac8aa6fe2361f7fb",
+      "note": "Original vision with historical exploratory references"
+    },
+    {
+      "id": "original_handoff",
+      "path": "archive/original-packages/band-evidence-handoff-v2.zip",
+      "native_origin_id": "libfile_b7725df98c9c8191a49fa543bf873ac4",
+      "sha256": "23e8b62d5383ac71c58a3a7394939620b5cc57e357d0493b6399e23726eca6ea",
+      "note": "v2 architecture/backlog/POCs, superseded order/storage"
+    },
+    {
+      "id": "initial_ux",
+      "path": "archive/original-packages/band-evidence-ux-review.zip",
+      "native_origin_id": "libfile_914e334f82d8819195d4b3e713d5d9b1",
+      "sha256": "7fee7e4a084a5ada29961e13b379b19a391ffc9bb033eb564ef1ab762d772868",
+      "note": "Initial standalone UX and original verification"
+    },
+    {
+      "id": "spotify_investigation",
+      "path": "archive/original-packages/spotify-import-investigation.zip",
+      "native_origin_id": "libfile_1f0c19e5f8e88191a9fb9250e35df934",
+      "sha256": "7a0cc0704570f6aeb3d0586949106155e185a75338926f6ca02d72d3150bad5e",
+      "note": "Real import source and evidence recovered"
+    },
+    {
+      "id": "owner_choices",
+      "path": "archive/owner-decisions-original.json",
+      "native_origin_id": "libfile_486b7442c040819183f8f15d79d26d41",
+      "sha256": "7d6ff793176240899979b494abd616417db893c82d4dcebdb715fd495937bc5e",
+      "note": "Original D1-D6 exact JSON"
+    },
+    {
+      "id": "original_calendar",
+      "path": "archive/opal-season-calendar.html",
+      "native_origin_id": "libfile_ac3cc9a764708191a4a2a4596d91c54b",
+      "sha256": "deb97eba5370b5655aa6cfff1e5616d5cf56f2b90f09f401e1f4d97d90ea22bb",
+      "note": "Earlier illustration, no date authority"
+    },
+    {
+      "id": "artist_csv",
+      "path": "data/real-inputs/opal-season-audience.csv",
+      "native_origin_id": "libfile_9ebd74b276388191a372e3d3926a876b",
+      "sha256": "d6cbbf17273d0eaac649b3c84677e0a9e4b8a84e8801ff84adf12ed37a3e1b06",
+      "note": "Exact supplied bytes; normalised handoff filename"
+    },
+    {
+      "id": "recording_csv",
+      "path": "data/real-inputs/better-man-streams.csv",
+      "native_origin_id": "libfile_dbbdb16626c481918d58449cf15beb01",
+      "sha256": "3382743d7396d923e1cb0caf845af1374aef64cafa0181678283da0d2259cb0a",
+      "note": "Exact supplied bytes; provisional recording mapping"
+    }
+  ],
+  "current_source": {
+    "project": "band-evidence-ux",
+    "commit": "e26ba792e5cf3c192c90fae4ba00cf3c3b1d980d",
+    "published_url": "https://band-evidence-ux.access593931.chatgpt.site",
+    "packaged_source": "reference/current-prototype/dist/"
+  },
+  "earlier_source": {
+    "project": "band-evidence-review",
+    "published_url": "https://band-evidence-review.access593931.chatgpt.site",
+    "packaged_source": "reference/original-pocs/dist/"
+  },
+  "local_prior_packages": [
+    "archive/original-packages/band-evidence-ux-v2.zip",
+    "archive/original-packages/band-campaign-ux-v3.zip",
+    "archive/original-packages/band-campaign-ux-v4.zip"
+  ],
+  "new_material": "Authoritative consolidated specification, agent plan/contracts/test cases and offline integrity scripts. This turn did not build production application code.",
+  "missing_recovered_deliverables": [],
+  "not_ever_completed": [
+    "Live source integration test",
+    "Model selection/inference/real training",
+    "Independent forecast validation",
+    "Production browser/device QA"
+  ]
+}

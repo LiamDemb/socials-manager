@@ -1,0 +1,341 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:band-evidence:recommendation:v1",
+  "title": "Recommendation proposal contract",
+  "description": "Target structured output. IDs/eligibility/constraints must additionally be validated by server services.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "campaign_id",
+    "base_campaign_revision",
+    "outcome_version_ids",
+    "kind",
+    "evidence_bundle_id",
+    "finding_version_ids",
+    "reason_summary",
+    "assumptions",
+    "limits",
+    "support",
+    "proposed_activity",
+    "scheduling",
+    "generation",
+    "validation"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "campaign_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "base_campaign_revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "outcome_version_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "kind": {
+      "enum": [
+        "evidence_backed_tactic",
+        "operational_dependency"
+      ]
+    },
+    "evidence_bundle_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "finding_version_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "reason_summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "assumptions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "limits": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "support": {
+      "enum": [
+        "insufficient",
+        "limited",
+        "moderate",
+        "strong",
+        "not_applicable"
+      ]
+    },
+    "proposed_activity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "purpose",
+        "channel",
+        "format",
+        "brief",
+        "cta",
+        "effort_minutes",
+        "asset_ids",
+        "reference_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 1
+        },
+        "channel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "format": {
+          "type": "string",
+          "minLength": 1
+        },
+        "brief": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 12000
+        },
+        "cta": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "effort_minutes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "asset_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "reference_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "caption_direction": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "headline_direction": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "scheduling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chosen_at_utc",
+        "local_datetime",
+        "timezone",
+        "window_start_utc",
+        "window_end_utc",
+        "basis",
+        "evidence_ids",
+        "constraints",
+        "rule_version",
+        "hard_date"
+      ],
+      "properties": {
+        "chosen_at_utc": {
+          "type": "string",
+          "minLength": 1
+        },
+        "local_datetime": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "window_start_utc": {
+          "type": "string",
+          "minLength": 1
+        },
+        "window_end_utc": {
+          "type": "string",
+          "minLength": 1
+        },
+        "basis": {
+          "enum": [
+            "own_performance",
+            "verified_availability",
+            "campaign_constraint",
+            "user_availability",
+            "manual"
+          ]
+        },
+        "evidence_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "rule_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hard_date": {
+          "type": "boolean"
+        }
+      }
+    },
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rules_version",
+        "schema_version",
+        "model_id",
+        "prompt_version",
+        "parameters",
+        "output_hash"
+      ],
+      "properties": {
+        "rules_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schema_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "model_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "prompt_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "parameters": {
+          "type": "object"
+        },
+        "output_hash": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "issues",
+        "checked_at_utc"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "draft",
+            "passed",
+            "blocked",
+            "stale"
+          ]
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "checked_at_utc": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "evidence_backed_tactic"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "evidence_bundle_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "finding_version_ids": {
+            "minItems": 1
+          },
+          "support": {
+            "enum": [
+              "limited",
+              "moderate",
+              "strong"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

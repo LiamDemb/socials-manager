@@ -1,0 +1,67 @@
+{
+  "scope": "Reference artifact inventory; production adoption gate remains",
+  "hard_exclusion": "No Chinese-owned/operated code, services, libraries, frameworks or models",
+  "components": [
+    {
+      "component": "Project HTML/CSS/JavaScript/Python and handoff scripts",
+      "origin": "Original project-specific code",
+      "state": "Implemented reference code; no new application packages introduced",
+      "limit": "Review/reimplement production boundaries, not supply-chain certification"
+    },
+    {
+      "component": "Python/SQLite standard-library import POC",
+      "origin": "Python Software Foundation; original SQLite/public-domain project",
+      "state": "Reference POC executed",
+      "limit": "Record exact future runtime/build and WAL patch state"
+    },
+    {
+      "component": "Node.js",
+      "origin": "Existing runtime used by original zero-dependency test suites",
+      "state": "Test runtime only",
+      "limit": "Future build/test runtime distribution and dependencies must be inventoried"
+    },
+    {
+      "component": "Inter",
+      "origin": "Rasmus Andersson official distribution, SIL OFL1.1",
+      "state": "External prototype stylesheet with offline system fallback",
+      "limit": "Audit local release font files/licence if bundled"
+    },
+    {
+      "component": "rehearsal.png",
+      "origin": "Original OpenAI image generation, fictional band; prompt in archived UX benchmark",
+      "state": "Illustrative UI asset",
+      "limit": "Not peer evidence or a photograph of the owner band"
+    },
+    {
+      "component": "Python/Django production stack",
+      "origin": "Proposed continuation of earlier monolith recommendation",
+      "state": "Build default, exact artifacts unselected",
+      "limit": "Audit direct/transitive/build/server packages before use"
+    },
+    {
+      "component": "Local model/runner",
+      "origin": "No selected model; Gemma only historical candidate",
+      "state": "Not downloaded, run or approved",
+      "limit": "Ownership/licence/hash/runtime audit and benchmark first; Qwen/DeepSeek excluded"
+    },
+    {
+      "component": "Sites hosting",
+      "origin": "OpenAI review prototype hosting",
+      "state": "Reference presentation only",
+      "limit": "No production band account integrations assumed or hosting required"
+    }
+  ],
+  "production_inventory_fields": [
+    "name",
+    "version",
+    "artifact_sha256",
+    "licence",
+    "origin_url",
+    "owner_operator",
+    "transitive_dependencies",
+    "build_runtime",
+    "audit_status",
+    "audit_evidence",
+    "reviewed_at"
+  ]
+}

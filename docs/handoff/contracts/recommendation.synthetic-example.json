@@ -1,0 +1,71 @@
+{
+  "id": "synthetic:rec-001",
+  "campaign_id": "synthetic:growth-campaign",
+  "base_campaign_revision": 1,
+  "outcome_version_ids": [
+    "synthetic:instagram-followers-v1"
+  ],
+  "kind": "evidence_backed_tactic",
+  "evidence_bundle_id": "synthetic:bundle-001",
+  "finding_version_ids": [
+    "synthetic:own-reel-finding-v1"
+  ],
+  "reason_summary": "Try a performance-led Reel based on compatible own Reel reach observations. Follower conversion remains a hypothesis.",
+  "assumptions": [
+    "Rehearsal clip ready",
+    "Instagram professional account is the selected channel"
+  ],
+  "limits": [
+    "Synthetic example only",
+    "Small observational reach sample does not establish follower uplift"
+  ],
+  "support": "limited",
+  "proposed_activity": {
+    "id": "synthetic:activity-001",
+    "purpose": "Discovery hypothesis supporting the follower objective",
+    "channel": "Instagram",
+    "format": "Reel",
+    "brief": "Select a ten-second rehearsal clip with the chorus hook. Start on the performance, add a short on-screen title and end with one follow prompt.",
+    "cta": "Follow for the next live clip",
+    "effort_minutes": 40,
+    "asset_ids": [
+      "synthetic:rehearsal-clip"
+    ],
+    "reference_ids": [
+      "synthetic:reference-001"
+    ],
+    "caption_direction": "One line about the song and a follow invitation",
+    "headline_direction": null
+  },
+  "scheduling": {
+    "chosen_at_utc": "2026-10-06T10:00:00Z",
+    "local_datetime": "2026-10-06T18:00:00+08:00",
+    "timezone": "Australia/Perth",
+    "window_start_utc": "2026-10-06T10:00:00Z",
+    "window_end_utc": "2026-10-06T12:00:00Z",
+    "basis": "own_performance",
+    "evidence_ids": [
+      "synthetic:timing-finding-v1"
+    ],
+    "constraints": [
+      "Asset ready",
+      "Within campaign window",
+      "Within shared capacity"
+    ],
+    "rule_version": "timing-example-v1",
+    "hard_date": false
+  },
+  "generation": {
+    "rules_version": "tactics-example-v1",
+    "schema_version": "recommendation-v1",
+    "model_id": null,
+    "prompt_version": null,
+    "parameters": {},
+    "output_hash": "ILLUSTRATIVE-NOT-A-REAL-GENERATION-HASH"
+  },
+  "validation": {
+    "state": "draft",
+    "issues": [],
+    "checked_at_utc": "2026-10-01T10:00:00Z"
+  }
+}

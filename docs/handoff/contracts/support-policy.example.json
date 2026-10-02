@@ -1,0 +1,24 @@
+{
+  "version": "support-rubric-provisional-1",
+  "status": "engineering default rubric; not validated success probabilities",
+  "levels": [
+    "insufficient",
+    "limited",
+    "moderate",
+    "strong"
+  ],
+  "hard_exclusions": [
+    "source purpose denied/unresolved",
+    "identity unresolved/excluded",
+    "metric scope/age incompatible",
+    "invalidated evidence",
+    "unknown required timezone",
+    "future data after cutoff"
+  ],
+  "limited": "Eligible observations but sparse/confounded/transfer hypothesis; assumptions and target mismatch explicit. No automatic conversion confidence.",
+  "moderate": "Multiple comparable independent own units, sufficient measured coverage, relevant context and stable directional pattern; review rubric and disclose confounders.",
+  "strong": "Reserve for independently replicated relevant evidence with stable evaluated support. Do not assign just from n or model self-confidence.",
+  "threshold_selection": "Version numeric sufficiency/cooldown thresholds with data/impact rationale before evaluations; prototype eight posts is a fixture gate only.",
+  "timing_and_tactic_support_separate": true,
+  "llm_assigns_support": false
+}

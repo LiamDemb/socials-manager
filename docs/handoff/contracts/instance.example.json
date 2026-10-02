@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "instance_id": "NEW-UUID-ON-INITIALISATION",
+  "own_artist_id": "CANONICAL-ARTIST-UUID",
+  "artist_label": "Opal Season",
+  "timezone": "Australia/Perth",
+  "data_root": "OWNER-CHOSEN-PERSISTENT-LOCAL-PATH",
+  "bind_host": "127.0.0.1",
+  "features": {
+    "automatic_publication": false,
+    "semantic_inference": false,
+    "spotify_model_fitting": false,
+    "validated_forecasts": false
+  },
+  "notice": "Example configuration, not credentials or a workspace system. Hardware/model/source flags enabled only after gates."
+}

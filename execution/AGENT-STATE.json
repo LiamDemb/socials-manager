@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "stage": 1,
+  "current_task": "S1-01",
+  "current_task_state": "onboarding_complete_awaiting_go",
+  "completed_tasks": [],
+  "blocked_tasks": [],
+  "last_commit": null,
+  "test_reports": [
+    {
+      "id": "onboarding-2026-10-02",
+      "path": "docs/reports/2026-10-02-onboarding-verification.md",
+      "scope": "handoff package and reference material only",
+      "results": {
+        "verify_package_live_handoff": "Failed (5 untracked .DS_Store files; content intact)",
+        "verify_package_clean_copy": "Passed",
+        "reference_checks": "Passed (146: 103 + 14 + 12 + 17, plus 7 JS syntax)"
+      }
+    }
+  ],
+  "source_capabilities": [
+    {
+      "source": "spotify_for_artists_csv",
+      "state": "transport_proven_in_reference_poc",
+      "identity": {
+        "artist_id": "3kL0Ts1i5vPiod2G2DxAu6",
+        "recording": "provisional:better-man:01 (canonical track URL/ISRC and release date pending)"
+      },
+      "purposes": {
+        "collect_store_display_descriptive": "to_record_in_source_policy",
+        "statistical_fit_model_infer_llm_ingest": "unresolved"
+      }
+    },
+    {
+      "source": "instagram_own_professional",
+      "state": "not_probed"
+    },
+    {
+      "source": "presave_ticket_provider",
+      "state": "none_selected"
+    }
+  ],
+  "model_gates": {
+    "spotify_fitting": "unresolved_source_use_and_insufficient_history",
+    "semantic_model": "not_selected_or_benchmarked"
+  },
+  "environment": {
+    "os": "macOS 15.7.4 arm64",
+    "python": "3.14.4",
+    "python_sqlite": "3.53.0",
+    "system_sqlite_cli": "3.43.2 (below WAL-reset fix; not for live DB use)",
+    "node": "v23.10.0 (non-LTS; reference suites only)"
+  },
+  "locations": {
+    "repository": "/Users/liamdemb/Projects/socials-manager",
+    "private_handoff": "handoff/ (Git-ignored, read-only)",
+    "real_fixtures": "handoff/data/real-inputs/ (read in place)",
+    "owner_data_root_proposed": "~/Library/Application Support/BandEvidence/"
+  },
+  "stage1_order": ["S1-01", "S1-02", "S1-03 || S1-04", "S1-06", "S1-05"],
+  "owner_reviews": [],
+  "pending_owner_inputs": [
+    "Better Man track URL or ISRC and confirmed release date (needed by Owner review 1; Stage 1 proceeds with pending identity)"
+  ],
+  "next_action": "On go-ahead: S1-01 dependency audit and pinning, stack/SQLite/access ADR, Django project skeleton, DATA_ROOT config and launcher",
+  "resume_note": "Handoff copy in docs/handoff/ is byte-identical; never edit it or the private handoff. Record decisions as ADRs."
+}
