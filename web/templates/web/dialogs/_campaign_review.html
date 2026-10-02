@@ -1,0 +1,20 @@
+{% load be %}<div class="review">
+  <section class="card summary">
+    <h3>{{ payload.name }}</h3>
+    <p class="meta">{{ type_label }} · {{ payload.start_date|day }} to {{ payload.end_date|day }}{% if object_label %} · {{ object_label }}{% endif %}</p>
+    <p class="meta">Primary outcome: {{ metric.label|default:"None" }}{% if payload.primary_outcome.target %}, target {{ payload.primary_outcome.target }}{% endif %}</p>
+    {% if resources.channels %}<p class="meta">Channels: {% for ch in resources.channels %}{{ ch|channel_label }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>{% endif %}
+  </section>
+  <section class="gaps" aria-label="Evidence gaps">
+    <h3 class="h4">Evidence gaps</h3>
+    <ul>{% for g in preview.gaps %}<li>{{ g }}</li>{% endfor %}</ul>
+  </section>
+  <section>
+    <div class="section-head"><h3 class="h4">Proposed work</h3><span class="meta">Untick anything you do not want. Edit dates freely.</span></div>
+    <div class="proposal-list" data-proposal-list>
+      {% for item in preview.activities %}{% include "web/dialogs/_activity_card.html" with item=item manual=False %}{% endfor %}
+    </div>
+    <button class="button" type="button" data-add-activity>Add an activity</button>
+  </section>
+  <p class="meta">Creating the campaign adds the ticked work to its calendar. Nothing is posted or sent.</p>
+</div>

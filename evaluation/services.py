@@ -127,7 +127,7 @@ def plan_splits(days, horizon, holdout_days, min_origins):
 def freeze_manifest(entity, metric_id, cutoff, criteria, purpose="statistical_fit"):
     metric = MetricDefinition.objects.get(pk=metric_id)
     if metric.kind != "flow":
-        raise DomainError("unsupported_target", "Stage 1 evaluation supports daily flow trajectories only.")
+        raise DomainError("unsupported_target", "Evaluation currently supports daily flow trajectories only.")
     gates = gate_report(entity, metric_id, purpose)
     if gates["policy"]["status"] != "Passed":
         raise PolicyDenied(purpose, gates["policy"]["detail"])

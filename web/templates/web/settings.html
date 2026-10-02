@@ -1,0 +1,71 @@
+{% extends "web/base.html" %}{% load be %}
+{% block content %}
+<section class="section card">
+  <h2 class="h3">Artist and schedule</h2>
+  <form data-api="/api/settings" data-after="reload" class="form-grid">
+    <label>Band name <input name="artist_label" value="{{ artist.label }}" maxlength="200" required></label>
+    <label>Spotify artist link
+      <input name="spotify_artist_url" type="url" placeholder="https://open.spotify.com/artist/…" value="">
+      <span class="hint">{% for i in artist_ids %}{% if i.provider == "spotify" %}Current: {{ i.external_id }}{% endif %}{% empty %}Not set. Paste the link from Spotify (Share, Copy link to artist).{% endfor %}</span>
+    </label>
+    <label>Timezone <input name="timezone" value="{{ cfg.timezone }}" required><span class="hint">IANA name, for example Australia/Perth</span></label>
+    <label>Weekly capacity (minutes) <input name="weekly_capacity_minutes" type="number" min="0" max="10080" value="{{ cfg.weekly_capacity_minutes }}"></label>
+    <label>Default post time <input name="default_post_time" type="time" value="{{ cfg.default_post_time }}"></label>
+    <label>Data is stale after (days) <input name="stale_after_days" type="number" min="1" max="90" value="{{ cfg.stale_after_days }}"></label>
+    <div class="actions span"><button class="button primary" type="submit">Save</button></div>
+    <p class="form-error span" role="alert"></p>
+  </form>
+</section>
+
+<section class="section">
+  <div class="section-head"><h2>Catalogue</h2><a class="button" href="/ui/object/new" data-dialog-open>Add item</a></div>
+  {% if objects %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th scope="col">Name</th><th scope="col">Type</th><th scope="col">Key date</th><th scope="col">Identity</th><th scope="col"><span class="sr-only">Edit</span></th></tr></thead>
+    <tbody>{% for o in objects %}<tr>
+      <td>{{ o.label }}</td><td>{{ o.get_kind_display }}</td>
+      <td>{% if o.key_date %}{{ o.key_date|day }}{% if o.date_authority != "owner_confirmed" %} <span class="badge tone-warn">Unconfirmed</span>{% endif %}{% else %}<span class="muted">Not set</span>{% endif %}</td>
+      <td><span class="badge tone-{% if o.identity_state == 'confirmed' %}good{% else %}warn{% endif %}">{{ o.get_identity_state_display }}</span></td>
+      <td><a href="/ui/object/{{ o.pk }}" data-dialog-open>Edit</a></td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="empty-line">No recordings, releases or events yet. They are added when you import a song file or create a campaign.</p>{% endif %}
+</section>
+
+<section class="section card">
+  <div class="section-head"><h2 class="h3">Backups</h2>
+    <form data-api="/api/backups" data-after="reload"><button class="button" type="submit">Back up now</button><p class="form-error" role="alert"></p></form>
+  </div>
+  <p class="meta">A backup runs daily while the app is open. Each one is checked and includes every original import file. Restoring needs the app stopped: <code>bin/band-evidence restore &lt;backup folder&gt;</code>.</p>
+  <ul class="plain">{% for b in backups %}<li>{{ b.created_at|slice:":16"|cut:"T"|default:b.created_at }} · {{ b.reason }} · {{ b.counts.sources_observation|num }} observations</li>{% empty %}<li class="empty-line">No backups yet.</li>{% endfor %}</ul>
+</section>
+
+<section class="section card">
+  <h2 class="h3">Forecast readiness</h2>
+  <p class="meta">Forecasts need a permitted source and enough history. Until both gates pass, no model is fitted and no forecast is shown.</p>
+  {% for g in gates %}
+  <div class="gate">
+    <h3 class="h4">{{ g.metric.label }}: {{ g.entity.label }}</h3>
+    <ul class="policy">
+      <li><span>Source use policy</span><span class="badge tone-{% if g.report.policy.status == 'Passed' %}good{% else %}warn{% endif %}">{{ g.report.policy.status }}</span></li>
+      <li><span>History</span><span class="badge tone-{% if g.report.history.status == 'Passed' %}good{% else %}warn{% endif %}">{{ g.report.history.status }}</span></li>
+    </ul>
+    <p class="meta">{{ g.report.policy.detail }} {{ g.report.history.detail }}</p>
+  </div>
+  {% empty %}<p class="empty-line">No imported daily flow metrics yet.</p>{% endfor %}
+  <details>
+    <summary>Data availability ledger</summary>
+    <p class="meta">When each import became available to the app. Evaluation uses only what was known at each point in time.</p>
+    <ul class="plain">{% for row in ledger %}<li>{{ row.batch.original_name }} · {{ row.first|default:"" }} to {{ row.last|default:"" }} · available {{ row.available_at|local }}{% if row.undone_at %} · undone {{ row.undone_at|local }}{% endif %}</li>{% empty %}<li class="empty-line">No imports.</li>{% endfor %}</ul>
+  </details>
+  <details>
+    <summary>Prospective forecast ledger</summary>
+    <ul class="plain">{% for f in forecasts %}<li>{{ f.model_ref }} · {{ f.target_start }} · {{ f.state }}</li>{% empty %}<li class="empty-line">No forecasts recorded. None are permitted for Spotify data yet.</li>{% endfor %}</ul>
+  </details>
+</section>
+
+<section class="section card">
+  <h2 class="h3">Diagnostics</h2>
+  <dl class="facts">{% for k, v in diag.items %}<div><dt>{{ k|humanise }}</dt><dd class="wrap">{{ v }}</dd></div>{% endfor %}</dl>
+</section>
+{% endblock %}

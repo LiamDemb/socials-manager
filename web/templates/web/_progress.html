@@ -1,0 +1,19 @@
+{% load be %}<div class="outcome-row" data-outcome="{{ row.ov.pk }}">
+  <div class="outcome-main">
+    <a class="outcome-title" href="/ui/outcome/{{ row.ov.pk }}" data-dialog-open>{{ row.title }}</a>
+    <div class="meta">{{ row.ov.scope_entity.label }} · {{ row.ov.period_start|short_day }} to {{ row.window_end|short_day }}{% if row.ov.date_basis == "utc_day" %} · UTC days{% endif %}</div>
+    {% if show_campaigns %}<div class="meta">Linked to {% for c, role in row.campaigns %}<a href="/campaigns/{{ c.pk }}/outcomes">{{ c.name }}</a>{% if role == "primary" %} (primary){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</div>{% endif %}
+  </div>
+  <div class="outcome-figures">
+    <span class="badge tone-{{ row.tone }}">{{ row.status_label }}</span>
+    {% if row.progress.value is not None %}
+      <div class="figure">{{ row.progress.value|num }} <span class="muted">of {{ row.ov.target|num }}</span></div>
+      <progress class="bar" max="100" value="{{ row.percent }}" aria-label="{{ row.percent }}% of target">{{ row.percent }}%</progress>
+    {% elif row.progress.status == "needs_source" %}
+      <div class="meta">No connected source measures this. <a href="/sources">Sources</a></div>
+    {% elif row.progress.status == "unknown" %}
+      <div class="meta">{% if row.ov.mode == "gain" %}Needs a starting snapshot from before {{ row.ov.period_start|short_day }}.{% else %}No compatible data yet.{% endif %} <a href="/sources">Import data</a></div>
+    {% endif %}
+    {% if row.progress.data_through %}<div class="meta">Data through {{ row.progress.data_through|short_day }}{% if row.progress.coverage is not None %} · {{ row.progress.coverage|percent }} of days covered{% endif %}</div>{% endif %}
+  </div>
+</div>

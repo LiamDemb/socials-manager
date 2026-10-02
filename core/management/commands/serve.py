@@ -1,4 +1,6 @@
 import os
+import signal
+import sys
 
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
@@ -28,6 +30,7 @@ class Command(BaseCommand):
 
         pid_file = data_root() / "run" / "server.pid"
         pid_file.write_text(str(os.getpid()))
+        signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
         self.stdout.write(f"Band Evidence on http://127.0.0.1:{port}  (data: {data_root()})")
         try:
             serve(application, host=settings.BIND_HOST, port=port, threads=4, ident="band-evidence", max_request_body_size=settings.DATA_UPLOAD_MAX_MEMORY_SIZE)

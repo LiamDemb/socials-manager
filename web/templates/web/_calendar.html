@@ -1,0 +1,55 @@
+{% load be %}<div class="calendar" data-calendar>
+  <div class="cal-toolbar">
+    <div class="cal-nav">
+      <a class="button icon" href="{{ base_url }}?view={{ cal.view }}&month={{ cal.prev_month|date:'Y-m' }}" aria-label="Previous month">‹</a>
+      <h2 class="cal-month">{{ cal.month_start|date:"F Y" }}</h2>
+      <a class="button icon" href="{{ base_url }}?view={{ cal.view }}&month={{ cal.next_month|date:'Y-m' }}" aria-label="Next month">›</a>
+      <a class="button subtle" href="{{ base_url }}?view={{ cal.view }}">Today</a>
+    </div>
+    <div class="segmented" role="group" aria-label="View">
+      <a href="{{ base_url }}?view=month&month={{ cal.month_start|date:'Y-m' }}"{% if cal.view == "month" %} aria-current="true"{% endif %}>Month</a>
+      <a href="{{ base_url }}?view=list&month={{ cal.month_start|date:'Y-m' }}"{% if cal.view == "list" %} aria-current="true"{% endif %}>List</a>
+    </div>
+    <span class="meta tz">Times in {{ cal.timezone }}</span>
+  </div>
+
+  {% if cal.view == "month" %}
+  <table class="month" aria-label="{{ cal.month_start|date:'F Y' }}">
+    <thead><tr>{% for n in cal.weekday_names %}<th scope="col">{{ n }}</th>{% endfor %}</tr></thead>
+    <tbody>
+      {% for week in cal.weeks %}<tr>
+        {% for d in week %}<td class="{% if not d.in_month %}out{% endif %}{% if d.today %} today{% endif %}">
+          <div class="day-num">{% if d.today %}<span class="sr-only">Today, </span>{% endif %}{{ d.date|date:"j" }}</div>
+          {% for v in d.items %}
+          <a class="chip tone-{{ v.tone }}{% if v.a.kind == 'milestone' %} milestone{% endif %}" href="/ui/activity/{{ v.a.pk }}" data-dialog-open
+             title="{{ v.a.title }} ({{ v.state }})">
+            {% if v.time %}<span class="chip-time">{{ v.time }}</span>{% endif %}<span class="chip-title">{{ v.a.title }}</span><span class="sr-only">, {{ v.state }}</span>
+          </a>
+          {% endfor %}
+        </td>{% endfor %}
+      </tr>{% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <ol class="agenda">
+    {% for v in cal.listed %}
+    {% ifchanged v.day %}<li class="agenda-day"><h3>{{ v.day|day }}{% if v.day == cal.today %} · Today{% endif %}</h3></li>{% endifchanged %}
+    <li class="agenda-item">
+      <span class="agenda-time">{% if v.time %}{{ v.time }}{% else %}All day{% endif %}</span>
+      <a href="/ui/activity/{{ v.a.pk }}" data-dialog-open>{{ v.a.title }}</a>
+      <span class="meta">{% if show_campaign %}{{ v.a.campaign.name }} · {% endif %}{{ v.a.channel|channel_label }}{% if v.a.format %} · {{ v.a.format }}{% endif %}</span>
+      <span class="badge tone-{{ v.tone }}">{{ v.state }}</span>
+      {% if v.a.review_flag %}<span class="badge tone-warn">Check date</span>{% endif %}
+    </li>
+    {% empty %}
+    <li class="empty-line">No dated work.</li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+  {% if cal.unscheduled %}
+  <section class="unscheduled">
+    <h3>Unscheduled</h3>
+    <ul>{% for v in cal.unscheduled %}<li><a href="/ui/activity/{{ v.a.pk }}" data-dialog-open>{{ v.a.title }}</a> <span class="badge tone-muted">{{ v.state }}</span></li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+</div>

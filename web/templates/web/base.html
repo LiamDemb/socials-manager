@@ -1,0 +1,55 @@
+{% load be %}<!doctype html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <meta name="be-timezone" content="{{ cfg.timezone }}">
+  <title>{{ page_title }} · Band Evidence</title>
+  <link rel="stylesheet" href="/static/css/app.css">
+  <script type="module" src="/static/js/app.js"></script>
+</head>
+<body data-section="{{ section }}">
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Main">
+      <div class="artist-name">{{ artist.label|default:cfg.artist_label }}</div>
+      <nav class="nav">
+        {% for key, label in nav %}
+        <a class="nav-item{% if section == key %} active{% endif %}" href="/{{ key }}"{% if section == key %} aria-current="page"{% endif %}>
+          {% include "web/_icon.html" with name=key %}<span>{{ label }}</span>
+        </a>
+        {% endfor %}
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="sidebar-rule"></div>
+        <a class="nav-item{% if section == 'ask' %} active{% endif %}" href="/ask">{% include "web/_icon.html" with name="ask" %}<span>Ask</span></a>
+        <a class="nav-item{% if section == 'settings' %} active{% endif %}" href="/settings">{% include "web/_icon.html" with name="settings" %}<span>Settings</span></a>
+      </div>
+    </aside>
+    <div class="main-col">
+      <header class="topbar">
+        <button class="menu-button" type="button" aria-controls="sidebar" aria-expanded="false" data-menu>
+          <span class="sr-only">Menu</span>{% include "web/_icon.html" with name="menu" %}
+        </button>
+        <h1 class="page-title">{% block heading %}{{ page_title }}{% endblock %}</h1>
+        <div class="top-actions">{% block actions %}{% endblock %}</div>
+      </header>
+      <main id="main" class="content" tabindex="-1" data-refresh>
+        <div class="offline-banner" role="status" hidden data-offline>The app is not responding. Changes are not being saved. Check that it is still running.</div>
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+  <dialog id="app-dialog" class="modal" aria-labelledby="dialog-title">
+    <div class="dialog-frame" data-dialog-frame></div>
+  </dialog>
+  <template id="discard-template">
+    <div class="discard-bar" role="alertdialog" aria-label="Unsaved changes">
+      <span>Discard unsaved changes?</span>
+      <button type="button" class="button" data-keep>Keep editing</button>
+      <button type="button" class="button danger" data-discard>Discard</button>
+    </div>
+  </template>
+</body>
+</html>

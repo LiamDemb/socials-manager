@@ -1,0 +1,45 @@
+{% extends "web/base.html" %}{% load be %}
+{% block actions %}
+<a class="button" href="/ui/campaign/{{ c.pk }}/edit" data-dialog-open>Edit campaign</a>
+{% if c.status == "active" or c.status == "paused" or c.status == "draft" %}
+<a class="button primary" href="/ui/campaign/{{ c.pk }}/activity/new" data-dialog-open>Add activity</a>
+{% endif %}
+{% endblock %}
+{% block content %}
+<p class="campaign-meta">
+  <span class="badge tone-{% if c.status == 'active' %}good{% else %}muted{% endif %}">{{ c.get_status_display }}</span>
+  {{ c.type|type_label }} · {{ c.start_date|day }} to {{ c.end_date|day }}{% if c.promoted_object %} · {{ c.promoted_object.label }}{% if c.promoted_object.key_date %} ({{ c.promoted_object.key_date|short_day }}{% if c.promoted_object.date_authority != "owner_confirmed" %}, unconfirmed{% endif %}){% endif %}{% endif %}
+</p>
+<nav class="tabs" aria-label="Campaign">
+  {% for key, label in tabs %}
+  <a class="tab" href="/campaigns/{{ c.pk }}{% if key != 'calendar' %}/{{ key }}{% endif %}"{% if tab == key %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</nav>
+
+{% if tab == "calendar" %}
+  {% include "web/_calendar.html" %}
+{% elif tab == "strategy" %}
+  <section class="section card prose">
+    <h2>Course of action</h2>
+    <p>This campaign has {{ counts.total }} activit{{ counts.total|pluralize:"y,ies" }}: {{ counts.operational }} operational task{{ counts.operational|pluralize }} from your dates and {{ counts.manual }} you added.</p>
+    <h3>Evidence gaps</h3>
+    <ul>
+      <li>No eligible evidence yet, so there are no evidence-backed tactics or timing recommendations. Activities are your schedule.</li>
+      <li>Completing an activity records what happened. It does not count as progress; outcomes move only with imported data.</li>
+      {% if c.resources.email_excluded %}<li>Email was selected without a confirmed opted-in list, so email work is excluded.</li>{% endif %}
+    </ul>
+    {% if c.resources.channels %}<h3>Resources</h3><p>Channels: {% for ch in c.resources.channels %}{{ ch|channel_label }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if c.resources.audience %}. Audience: {{ c.resources.audience }}{% endif %}</p>{% endif %}
+  </section>
+{% elif tab == "outcomes" %}
+  <div class="section-head"><h2>Outcomes</h2>{% if c.status != "completed" and c.status != "cancelled" %}<a class="button" href="/ui/campaign/{{ c.pk }}/outcome/new" data-dialog-open>Add outcome</a>{% endif %}</div>
+  {% for row in outcomes %}
+    <div class="role-label">{% if roles|get:row.ov.pk == "primary" %}Primary{% else %}Supporting{% endif %}</div>
+    {% include "web/_progress.html" with show_campaigns=True %}
+  {% endfor %}
+{% elif tab == "learning" %}
+  <div class="empty">
+    <h3>No reviewed results yet</h3>
+    <p>When the campaign ends, review its measured outcomes and record what to repeat, adapt or stop. Results and experiments appear here.</p>
+  </div>
+{% endif %}
+{% endblock %}

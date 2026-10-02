@@ -1,0 +1,33 @@
+{% extends "web/base.html" %}{% load be %}
+{% block actions %}
+<a class="button" href="/calendar">Calendar</a>
+<a class="button primary" href="/ui/campaign/new" data-dialog-open>Create campaign</a>
+{% endblock %}
+{% block content %}
+{% if not any_campaigns %}
+<div class="empty">
+  <h3>No campaigns yet</h3>
+  <p>A campaign joins one goal, its measurable outcomes and the dated work to get there.</p>
+  <a class="button primary" href="/ui/campaign/new" data-dialog-open>Create campaign</a>
+</div>
+{% else %}
+{% for status, items in grouped.items %}{% if items %}
+<section class="section">
+  <div class="section-head"><h2>{{ status|capfirst }}</h2><span class="meta">{{ items|length }}</span></div>
+  <div class="card-grid">
+    {% for c in items %}
+    <a class="card campaign-card" href="/campaigns/{{ c.pk }}">
+      <span class="meta">{{ c.type|type_label }}</span>
+      <h3>{{ c.name }}</h3>
+      <p class="meta">{{ c.start_date|short_day }} to {{ c.end_date|day }}{% if c.promoted_object %} · {{ c.promoted_object.label }}{% endif %}</p>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}{% endfor %}
+<section class="section">
+  <div class="section-head"><h2>Outcomes</h2><span class="meta">Each contract once, with every campaign it belongs to</span></div>
+  {% for row in outcomes %}{% include "web/_progress.html" with show_campaigns=True %}{% empty %}<p class="empty-line">No outcomes yet.</p>{% endfor %}
+</section>
+{% endif %}
+{% endblock %}

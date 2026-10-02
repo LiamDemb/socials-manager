@@ -1,1 +1,61 @@
-urlpatterns = []
+from django.conf import settings
+from django.urls import path, re_path
+from django.views.static import serve
+
+from . import api, views
+
+urlpatterns = [
+    path("", views.root),
+    path("favicon.ico", views.favicon),
+    path("today", views.today, name="today"),
+    path("campaigns", views.campaigns, name="campaigns"),
+    path("calendar", views.calendar, name="calendar"),
+    path("campaigns/<uuid:campaign_id>", views.campaign, name="campaign"),
+    path("campaigns/<uuid:campaign_id>/<str:tab>", views.campaign, name="campaign_tab"),
+    path("evidence", views.evidence, name="evidence"),
+    path("evidence/data/<uuid:entity_id>/<str:metric_id>", views.evidence_series, name="evidence_series"),
+    path("evidence/<str:tab>", views.evidence, name="evidence_tab"),
+    path("sources", views.sources_page, name="sources"),
+    path("sources/imports/<uuid:batch_id>", views.import_batch, name="import_batch"),
+    path("sources/imports/<uuid:batch_id>/download/<str:kind>", views.import_download, name="import_download"),
+    path("sources/export.csv", views.export_all, name="export_all"),
+    path("settings", views.settings_page, name="settings"),
+    path("peers", views.placeholder, {"section": "peers"}, name="peers"),
+    path("inspiration", views.placeholder, {"section": "inspiration"}, name="inspiration"),
+    path("ask", views.placeholder, {"section": "ask"}, name="ask"),
+    # Dialog fragments
+    path("ui/activity/<uuid:activity_id>", views.ui_activity),
+    path("ui/activity/<uuid:activity_id>/edit", views.ui_activity_edit),
+    path("ui/activity/<uuid:activity_id>/why", views.ui_activity_why),
+    path("ui/activity/<uuid:activity_id>/timing", views.ui_activity_timing),
+    path("ui/campaign/new", views.ui_campaign_new),
+    path("ui/campaign/<uuid:campaign_id>/edit", views.ui_campaign_edit),
+    path("ui/campaign/<uuid:campaign_id>/activity/new", views.ui_activity_new),
+    path("ui/campaign/<uuid:campaign_id>/outcome/new", views.ui_outcome_add),
+    path("ui/source/<uuid:source_id>", views.ui_source),
+    path("ui/outcome/<uuid:ov_id>", views.ui_outcome),
+    path("ui/observation/<uuid:version_id>", views.ui_observation),
+    path("ui/upload", views.ui_upload),
+    path("ui/object/new", views.ui_object),
+    path("ui/object/<uuid:object_id>", views.ui_object),
+    # JSON API
+    path("api/imports", api.import_upload),
+    path("api/imports/<uuid:batch_id>/mapping", api.import_mapping),
+    path("api/imports/<uuid:batch_id>/approve", api.import_approve),
+    path("api/imports/<uuid:batch_id>/commit", api.import_commit),
+    path("api/imports/<uuid:batch_id>/undo", api.import_undo),
+    path("api/imports/<uuid:batch_id>/cancel", api.import_cancel),
+    path("api/campaigns/preview", api.campaign_preview),
+    path("api/campaigns", api.campaign_create),
+    path("api/campaigns/<uuid:campaign_id>", api.campaign_update),
+    path("api/campaigns/<uuid:campaign_id>/status", api.campaign_status),
+    path("api/campaigns/<uuid:campaign_id>/outcomes", api.campaign_outcome),
+    path("api/campaigns/<uuid:campaign_id>/activities", api.activity_create),
+    path("api/activities/<uuid:activity_id>", api.activity_update),
+    path("api/activities/<uuid:activity_id>/execute", api.activity_execute),
+    path("api/objects", api.object_create),
+    path("api/objects/<uuid:object_id>", api.object_update),
+    path("api/settings", api.settings_update),
+    path("api/backups", api.backup_now),
+    re_path(r"^static/(?P<path>(css|js)/[A-Za-z0-9_.-]+)$", serve, {"document_root": settings.STATIC_ROOT_SOURCE}),
+]

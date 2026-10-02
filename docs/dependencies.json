@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "audited": "2026-10-02",
+  "policy": "No Chinese-owned or operated code, services, libraries or models; unknown provenance is blocked (AGENTS.md). Hash-pinned installs with --require-hashes --no-deps.",
+  "environment": {
+    "os": "macOS 15.7.4 arm64",
+    "python": "3.14.4 (Homebrew python@3.14)",
+    "sqlite_linked": "3.53.0",
+    "browser_for_tests": "Installed Google Chrome (Google LLC); no Playwright browser download"
+  },
+  "runtime": [
+    {"name": "Django", "version": "5.2.17", "steward": "Django Software Foundation (US non-profit)", "licence": "BSD-3-Clause", "purpose": "Web framework, ORM, migrations, templates", "decision": "Approved"},
+    {"name": "asgiref", "version": "3.12.1", "steward": "Django Software Foundation", "licence": "BSD-3-Clause", "purpose": "Django dependency", "decision": "Approved"},
+    {"name": "sqlparse", "version": "0.6.0", "steward": "Andi Albrecht and contributors (Germany)", "licence": "BSD-3-Clause", "purpose": "Django dependency", "decision": "Approved"},
+    {"name": "waitress", "version": "3.0.2", "steward": "Pylons Project", "licence": "ZPL-2.1", "purpose": "Loopback WSGI server", "decision": "Approved"}
+  ],
+  "test_only": [
+    {"name": "playwright", "version": "1.63.0", "steward": "Microsoft Corporation (US)", "licence": "Apache-2.0", "purpose": "Browser acceptance tests (AC12, AC13, layout)", "decision": "Approved for tests only"},
+    {"name": "greenlet", "version": "3.5.6", "steward": "python-greenlet project (gevent maintainers)", "licence": "MIT/PSF", "purpose": "Playwright dependency", "decision": "Approved for tests only"},
+    {"name": "pyee", "version": "13.0.1", "steward": "Josh Holbrook and contributors (US)", "licence": "MIT", "purpose": "Playwright dependency", "decision": "Approved for tests only"},
+    {"name": "typing_extensions", "version": "4.16.0", "steward": "Python core developers (PSF)", "licence": "PSF-2.0", "purpose": "Playwright dependency", "decision": "Approved for tests only"}
+  ],
+  "not_used": [
+    {"name": "Node.js / npm packages", "reason": "Not needed; browser JavaScript is original and unbundled"},
+    {"name": "Any LLM or local model", "reason": "Not selected or benchmarked; Spotify LLM use is Blocked by source policy"},
+    {"name": "Hosted services, CDNs, analytics, fonts", "reason": "Loopback-only, no external requests at runtime"}
+  ]
+}

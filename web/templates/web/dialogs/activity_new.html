@@ -1,0 +1,33 @@
+{% load be %}<div class="frame" data-frame data-title="Add activity">
+{% include "web/dialogs/_head.html" with heading="Add activity" eyebrow=c.name %}
+<div class="modal-body" tabindex="0">
+  <form id="activity-new-form" data-api="/api/campaigns/{{ c.pk }}/activities" data-after="close" class="stack">
+    <label>Title <input name="title" required maxlength="200"></label>
+    <div class="row">
+      <label>Date <input type="date" name="date" value="{{ date_hint }}"></label>
+      <label>Time <input type="time" name="time" value="{{ cfg.default_post_time }}"><span class="hint">Leave empty for all day</span></label>
+    </div>
+    <div class="row">
+      <label>Channel
+        <select name="channel" data-channel-select><option value="">None</option>
+          {% for key, label, formats in channels %}{% if key != "email" or c.resources.email_list_confirmed %}<option value="{{ key }}" data-formats="{{ formats|join:'|' }}">{{ label }}</option>{% endif %}{% endfor %}
+        </select>
+      </label>
+      <label>Format <input name="format" list="format-options" maxlength="40"><datalist id="format-options" data-format-list></datalist></label>
+    </div>
+    <label>Purpose <textarea name="purpose" rows="2" maxlength="2000"></textarea></label>
+    <details><summary>Brief, call to action and checklist</summary>
+      <label>Brief <textarea name="brief" rows="5" maxlength="10000"></textarea></label>
+      <label>Call to action <input name="cta" maxlength="300"></label>
+      <label>Checklist <textarea name="checklist" rows="3" placeholder="One item per line"></textarea></label>
+    </details>
+    <label>Effort (minutes) <input type="number" name="effort_minutes" min="0" value="30"></label>
+    <p class="meta">Times are in {{ c.timezone }}. This is your schedule; it does not claim evidence support.</p>
+    <p class="form-error" role="alert"></p>
+  </form>
+</div>
+<footer class="modal-foot">
+  <button class="button subtle" type="button" data-dialog-close>Cancel</button>
+  <button class="button primary" type="submit" form="activity-new-form">Add activity</button>
+</footer>
+</div>

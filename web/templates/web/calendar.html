@@ -1,0 +1,6 @@
+{% extends "web/base.html" %}
+{% block actions %}<a class="button primary" href="/ui/campaign/new" data-dialog-open>Create campaign</a>{% endblock %}
+{% block content %}
+<p class="meta">All work from active campaigns.</p>
+{% include "web/_calendar.html" with show_campaign=True %}
+{% endblock %}

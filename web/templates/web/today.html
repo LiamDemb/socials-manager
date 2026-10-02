@@ -1,0 +1,92 @@
+{% extends "web/base.html" %}{% load be %}
+{% block actions %}
+<a class="button" href="/calendar">Calendar</a>
+<a class="button primary" href="/ui/campaign/new" data-dialog-open>Create campaign</a>
+{% endblock %}
+{% block content %}
+<p class="clock" data-clock>{{ local_now|local:"%A %-d %B, %H:%M" }} · {{ cfg.timezone }}</p>
+
+{% if alerts %}
+<section class="alerts" aria-label="Needs attention">
+  {% for a in alerts %}
+  <div class="alert tone-{{ a.tone }}">
+    <span class="alert-owner">{{ a.owner }}</span>
+    {% if a.dialog %}<a href="{{ a.dialog }}" data-dialog-open>{{ a.text }}</a>{% else %}<a href="{{ a.href }}">{{ a.text }}</a>{% endif %}
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+<section class="section">
+  <div class="section-head"><h2>Artist movement</h2><span class="meta">Spotify for Artists · UTC days</span></div>
+  {% if not has_data %}
+  <div class="empty">
+    <h3>No Spotify data yet</h3>
+    <p>Export your Audience timeline and song timelines from Spotify for Artists, then import them. Nothing here is estimated.</p>
+    <a class="button primary" href="/sources">Import Spotify CSVs</a>
+  </div>
+  {% else %}
+  <div class="card-grid four">
+    {% for t in trends %}
+    <article class="card trend">
+      <h3>{{ t.metric.label }}</h3>
+      {% if t.value is None %}
+        <div class="figure muted">Unknown</div>
+        <p class="meta">{% if t.incomplete %}Some of the latest 7 days are missing.{% else %}No data.{% endif %}</p>
+      {% else %}
+        <div class="figure">{{ t.value|num }}</div>
+        <p class="meta">{{ t.window }}{% if t.change is not None %} · {{ t.change|signed }} vs {{ t.comparison }}{% else %} · no comparable earlier period{% endif %}</p>
+      {% endif %}
+      <p class="meta fresh-{{ t.fresh.state }}">{{ t.fresh.label }}{% if t.fresh.state == "stale" %} · <a href="/sources">Import a fresh export</a>{% endif %}</p>
+    </article>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<div class="two-col">
+  <section class="section">
+    <div class="section-head"><h2>Due and overdue</h2><a class="meta" href="/calendar?view=list">All work</a></div>
+    {% if due %}
+    <ul class="work-list">
+      {% for v in due %}
+      <li class="work-item">
+        <span class="badge tone-{{ v.tone }}">{{ v.state }}</span>
+        <a href="/ui/activity/{{ v.a.pk }}" data-dialog-open>{{ v.a.title }}</a>
+        <span class="meta">{{ v.a.campaign.name }} · {% if v.time %}{{ v.day|short_day }} {{ v.time }}{% else %}{{ v.day|short_day }}, all day{% endif %}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty-line">Nothing due today or overdue.</p>
+    {% endif %}
+  </section>
+  <section class="section">
+    <div class="section-head"><h2>Coming up</h2><span class="meta">Next 3 weeks</span></div>
+    {% if milestones %}
+    <ul class="work-list">
+      {% for v in milestones %}
+      <li class="work-item"><span class="badge tone-neutral">{{ v.day|short_day }}</span><a href="/ui/activity/{{ v.a.pk }}" data-dialog-open>{{ v.a.title }}</a><span class="meta">{{ v.a.campaign.name }}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="empty-line">No milestones in the next three weeks.</p>
+    {% endif %}
+  </section>
+</div>
+
+<section class="section">
+  <div class="section-head"><h2>Active outcomes</h2><a class="meta" href="/campaigns">All campaigns</a></div>
+  {% if outcomes %}
+    {% for row in outcomes %}{% include "web/_progress.html" with show_campaigns=True %}{% endfor %}
+  {% elif campaigns %}
+    <p class="empty-line">Active campaigns have no outcomes.</p>
+  {% else %}
+    <div class="empty">
+      <h3>No active campaigns</h3>
+      <p>Start with a release, a show or an audience goal. Progress is measured only from imported data.</p>
+      <a class="button primary" href="/ui/campaign/new" data-dialog-open>Create campaign</a>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

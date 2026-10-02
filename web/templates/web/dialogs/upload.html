@@ -1,0 +1,14 @@
+<div class="frame" data-frame data-title="Import CSV">
+{% include "web/dialogs/_head.html" with heading="Import a Spotify for Artists CSV" %}
+<div class="modal-body" tabindex="0">
+  <form id="upload-form" data-api="/api/imports" data-multipart data-after="navigate" class="stack">
+    <label>CSV file <input type="file" name="file" accept=".csv,text/csv" required></label>
+    <p class="meta">Audience timeline or a song streams timeline, up to {{ max_mb }} MB. You will see a preview before anything is stored as data. The original file is kept unchanged.</p>
+    <p class="form-error" role="alert"></p>
+  </form>
+</div>
+<footer class="modal-foot">
+  <button class="button subtle" type="button" data-dialog-close>Cancel</button>
+  <button class="button primary" type="submit" form="upload-form">Preview import</button>
+</footer>
+</div>

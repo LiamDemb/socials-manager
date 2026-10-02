@@ -1,0 +1,20 @@
+{% load be %}<div class="frame" data-frame data-title="Observation">
+{% include "web/dialogs/_head.html" with heading=o.metric.label eyebrow=o.entity.label %}
+<div class="modal-body" tabindex="0">
+  <dl class="facts">
+    <div><dt>Day</dt><dd>{{ o.period_start|day }} (UTC)</dd></div>
+    <div><dt>Current value</dt><dd>{{ o.active_version.value|num }}{% if o.active_version.version > 1 %} (revision {{ o.active_version.version }}){% endif %}</dd></div>
+    <div><dt>Source</dt><dd><a href="/ui/source/{{ o.source_id }}" data-dialog-push>{{ o.source.label }}</a></dd></div>
+  </dl>
+  <h3 class="h4">Versions</h3>
+  <ol class="history">
+    {% for v in versions %}
+    <li>
+      <strong>v{{ v.version }}: {{ v.value|num }}</strong>{% if v.pk == o.active_version_id %} <span class="badge tone-good">Current</span>{% endif %}
+      <div class="meta">Available {{ v.available_at|local }} · row {{ v.source_row_ref }}{% if v.revision_reason %} · {{ v.revision_reason }}{% endif %}</div>
+      <div class="meta">From {% for c in v.contributions.all %}<a href="/sources/imports/{{ c.batch_id }}">{{ c.batch.original_name }}</a>{% if not c.active %} (undone){% endif %}{% if not forloop.last %}, {% endif %}{% endfor %}</div>
+    </li>
+    {% endfor %}
+  </ol>
+</div>
+</div>

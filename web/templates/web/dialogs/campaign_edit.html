@@ -1,0 +1,30 @@
+{% load be %}<div class="frame" data-frame data-title="Edit campaign">
+{% include "web/dialogs/_head.html" with heading="Edit campaign" eyebrow=c.name %}
+<div class="modal-body" tabindex="0">
+  {% if c.status != "completed" and c.status != "cancelled" %}
+  <form id="campaign-edit-form" data-api="/api/campaigns/{{ c.pk }}" data-after="close" class="stack">
+    <input type="hidden" name="revision" value="{{ c.revision }}">
+    <label>Name <input name="name" value="{{ c.name }}" required maxlength="200"></label>
+    <div class="row">
+      <label>Starts <input type="date" name="start_date" value="{{ c.start_date|date:'Y-m-d' }}" required></label>
+      <label>Ends <input type="date" name="end_date" value="{{ c.end_date|date:'Y-m-d' }}" required></label>
+    </div>
+    <p class="meta">Changing dates flags planned work for review. Nothing moves automatically.</p>
+    <div class="actions"><button class="button primary" type="submit">Save</button></div>
+    <p class="form-error" role="alert"></p>
+  </form>
+  {% endif %}
+  <section class="group">
+    <h3 class="group-title">Status: {{ c.get_status_display }}</h3>
+    <form data-api="/api/campaigns/{{ c.pk }}/status" data-after="close" class="stack">
+      <input type="hidden" name="revision" value="{{ c.revision }}">
+      <label>Reason <textarea name="reason" rows="2" maxlength="500" placeholder="{% if c.status == 'completed' or c.status == 'cancelled' %}Required to reactivate{% else %}Optional{% endif %}"></textarea></label>
+      <div class="actions">
+        {% for t in transitions %}<button class="button{% if t == 'cancelled' %} danger{% endif %}" type="submit" name="status" value="{{ t }}">{% if t == "active" %}{% if c.status == "draft" %}Activate{% elif c.status == "paused" %}Resume{% else %}Reactivate{% endif %}{% elif t == "paused" %}Pause{% elif t == "completed" %}Mark completed{% else %}Cancel campaign{% endif %}</button>{% endfor %}
+      </div>
+      <p class="meta">Paused campaigns keep their history but leave Today. Completed and cancelled campaigns are read-only until reactivated.</p>
+      <p class="form-error" role="alert"></p>
+    </form>
+  </section>
+</div>
+</div>

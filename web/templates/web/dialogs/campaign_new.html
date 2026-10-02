@@ -1,0 +1,106 @@
+{% load be %}<div class="frame wide" data-frame data-title="Create campaign" data-campaign-flow>
+<header class="modal-head">
+  <div class="frame-nav" data-frame-nav></div>
+  <div class="head-row">
+    <div class="head-text">
+      <p class="eyebrow" data-step-label aria-live="polite">1 of 3 · Purpose and outcomes</p>
+      <h2 id="dialog-title" tabindex="-1">Create campaign</h2>
+    </div>
+    <button class="close" type="button" data-dialog-close aria-label="Close">×</button>
+  </div>
+</header>
+<div class="modal-body" tabindex="0">
+  <form id="campaign-form" data-campaign-form novalidate>
+    <section data-step="1" class="stack">
+      <fieldset class="type-picker">
+        <legend>What is this campaign for?</legend>
+        {% for key, t in types.items %}
+        <label class="type-option">
+          <input type="radio" name="type" value="{{ key }}" data-object-kind="{{ t.object_kinds|first|default:'' }}" data-anchor="{{ t.anchor|default:'' }}" data-group="{{ t.group }}"{% if forloop.first %} checked{% endif %}>
+          <span>{{ t.label }}</span>
+        </label>
+        {% endfor %}
+      </fieldset>
+      <label>Campaign name <input name="name" required maxlength="200" placeholder="For example: Next single, Perth show"></label>
+      <div class="row">
+        <label>Starts <input type="date" name="start_date" value="{{ today|date:'Y-m-d' }}" required></label>
+        <label>Ends <input type="date" name="end_date" required></label>
+      </div>
+
+      <fieldset class="stack" data-object-block>
+        <legend data-object-legend>What does it promote?</legend>
+        <label>Item
+          <select name="object_id" data-object-select>
+            {% for o in objects %}<option value="{{ o.pk }}" data-kind="{{ o.kind }}" data-key-date="{{ o.key_date|date:'Y-m-d' }}">{{ o.label }}{% if o.key_date %} ({{ o.key_date|short_day }}){% endif %}</option>{% endfor %}
+            <option value="new">Add a new one</option>
+          </select>
+        </label>
+        <div class="stack indent" data-new-object>
+          <label>Name <input name="object_label" maxlength="200"></label>
+          <div class="row">
+            <label><span data-anchor-label>Key date</span> <input type="date" name="object_key_date"></label>
+            <label class="check"><input type="checkbox" name="object_date_confirmed" value="1"> Date is confirmed</label>
+          </div>
+          <div class="row" data-event-only>
+            <label>Venue <input name="venue" maxlength="200"></label>
+            <label>Ticket link <input type="url" name="ticket_url" maxlength="500" placeholder="https://…"></label>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="stack">
+        <legend>Primary outcome</legend>
+        <div class="row">
+          <label>Measure
+            <select name="metric_id" data-metric-select required>
+              {% for m in metrics %}<option value="{{ m.pk }}" data-scope="{{ m.scope_kind }}" data-modes="{{ m.outcome_modes|join:'|' }}" data-sourced="{% if sourced|get:m.pk %}1{% else %}0{% endif %}">{{ m.label }}</option>{% endfor %}
+            </select>
+          </label>
+          <label>Type
+            <select name="outcome_mode" data-mode-select><option value="total">Total in window</option><option value="gain">Gain from start</option><option value="level">Reach a level</option></select>
+          </label>
+          <label>Target <input type="number" name="target" min="0" required></label>
+        </div>
+        <p class="hint" data-source-hint hidden>No connected source measures this yet. It will show Needs source, and a setup task is proposed.</p>
+        <p class="hint">If an identical outcome already exists for the same item and window, it is shared rather than copied.</p>
+      </fieldset>
+      <details>
+        <summary>Supporting outcome (optional)</summary>
+        <div class="row">
+          <label>Measure <select name="supporting_metric_id" data-metric-select data-optional><option value="">None</option>{% for m in metrics %}<option value="{{ m.pk }}" data-scope="{{ m.scope_kind }}" data-modes="{{ m.outcome_modes|join:'|' }}">{{ m.label }}</option>{% endfor %}</select></label>
+          <label>Type <select name="supporting_mode" data-mode-select><option value="total">Total in window</option><option value="gain">Gain from start</option><option value="level">Reach a level</option></select></label>
+          <label>Target <input type="number" name="supporting_target" min="0"></label>
+        </div>
+      </details>
+    </section>
+
+    <section data-step="2" class="stack" hidden>
+      <fieldset>
+        <legend>Channels you will use</legend>
+        <div class="check-grid">
+          {% for key, label, formats in channels %}<label class="check"><input type="checkbox" name="channels" value="{{ key }}"{% if key == "instagram" %} checked{% endif %}> {{ label }}</label>{% endfor %}
+        </div>
+        <label class="check"><input type="checkbox" name="email_list_confirmed" value="1"> I have an opted-in email list I am allowed to use</label>
+      </fieldset>
+      <label>Audience <input name="audience" maxlength="300" placeholder="For example: Perth indie fans, existing followers"></label>
+      <div class="row">
+        <label>Assets ready by <input type="date" name="assets_ready_date"></label>
+        <label>Budget (AUD) <input type="number" name="budget" min="0" step="0.01"></label>
+      </div>
+      <label>Constraints <textarea name="constraints" rows="2" maxlength="1000" placeholder="Unavailable dates, rehearsals, anything to plan around"></textarea></label>
+      <p class="meta">Weekly capacity is {{ cfg.weekly_capacity_minutes }} minutes across all campaigns (change it in Settings). Existing data and outcomes are used automatically.</p>
+    </section>
+
+    <section data-step="3" hidden data-review-slot aria-live="polite"></section>
+    <template data-manual-activity>{% include "web/dialogs/_activity_card.html" with manual=True default_time=default_time %}</template>
+    <p class="form-error" role="alert"></p>
+  </form>
+</div>
+<footer class="modal-foot">
+  <button class="button subtle" type="button" data-step-back hidden>Back</button>
+  <span class="foot-spacer"></span>
+  <button class="button" type="button" data-create="draft" hidden>Save as draft</button>
+  <button class="button primary" type="button" data-step-next>Continue</button>
+  <button class="button primary" type="button" data-create="active" hidden>Create campaign</button>
+</footer>
+</div>

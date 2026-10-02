@@ -1,0 +1,40 @@
+{% extends "web/base.html" %}{% load be %}
+{% block heading %}{{ metric.label }}{% endblock %}
+{% block content %}
+{% include "web/_evidence_tabs.html" %}
+<a class="back-link" href="/evidence/data{% if back_query %}?{{ back_query }}{% endif %}" data-back-link>‹ Observed data</a>
+<section class="section card">
+  <h2 class="h3">Underlying data: {{ metric.label }}, {{ entity.label }}</h2>
+  <p class="meta">{{ metric.definition }}</p>
+  <dl class="facts">
+    <div><dt>Source</dt><dd>Spotify for Artists CSV, reviewed import</dd></div>
+    <div><dt>Days</dt><dd>{{ count|num }}{% if first %} · {{ first|day }} to {{ through|day }} (UTC){% endif %}</dd></div>
+    <div><dt>{% if rule == "sum" %}Total in range{% else %}Latest value{% endif %}</dt><dd>{{ total|num }}{% if rule != "sum" and rule != "none" %} <span class="meta">{{ rule }}</span>{% endif %}</dd></div>
+  </dl>
+  <form class="filters" method="get" data-filter-form>
+    {% if filters.entity %}<input type="hidden" name="entity" value="{{ filters.entity }}">{% endif %}
+    {% if filters.metric %}<input type="hidden" name="metric" value="{{ filters.metric }}">{% endif %}
+    <label>From <input type="date" name="start" value="{{ filters.start }}"></label>
+    <label>To <input type="date" name="end" value="{{ filters.end }}"></label>
+    <button class="button" type="submit">Apply</button>
+  </form>
+</section>
+<div class="table-wrap">
+  <table class="data">
+    <thead><tr><th scope="col">Day (UTC)</th><th scope="col" class="num">Value</th><th scope="col"><span class="sr-only">Detail</span></th></tr></thead>
+    <tbody>
+      {% for d, v, version_id in pager %}
+      <tr><td>{{ d|day }}</td><td class="num">{{ v|num }}</td><td><a href="/ui/observation/{{ version_id }}" data-dialog-open>Source</a></td></tr>
+      {% empty %}<tr><td colspan="3" class="empty-line">No values in this range.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% if pager.has_other_pages %}
+<nav class="pager" aria-label="Pages">
+  {% if pager.has_previous %}<a class="button" href="?{% if back_query %}{{ back_query }}&{% endif %}page={{ pager.previous_page_number }}">Newer</a>{% endif %}
+  <span class="meta">Page {{ pager.number }} of {{ pager.paginator.num_pages }}</span>
+  {% if pager.has_next %}<a class="button" href="?{% if back_query %}{{ back_query }}&{% endif %}page={{ pager.next_page_number }}">Older</a>{% endif %}
+</nav>
+{% endif %}
+{% endblock %}

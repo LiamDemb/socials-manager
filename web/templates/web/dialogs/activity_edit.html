@@ -1,0 +1,28 @@
+{% load be %}<div class="frame" data-frame data-title="Edit activity">
+{% include "web/dialogs/_head.html" with heading="Edit activity" eyebrow=v.a.campaign.name %}
+<div class="modal-body" tabindex="0">
+  <form id="activity-edit-form" data-api="/api/activities/{{ v.a.pk }}" data-after="back" class="stack">
+    <input type="hidden" name="revision" value="{{ v.a.revision }}">
+    <label>Title <input name="title" value="{{ v.a.title }}" required maxlength="200"></label>
+    <div class="row">
+      <label>Date <input type="date" name="date" value="{{ v.a.planned_local|slice:':10' }}"{% if v.a.status != "planned" %} disabled{% endif %}></label>
+      <label>Time <input type="time" name="time" value="{% if v.time %}{{ v.time }}{% endif %}"{% if v.a.status != "planned" %} disabled{% endif %}><span class="hint">Leave empty for all day</span></label>
+    </div>
+    {% if v.a.status != "planned" %}<p class="meta">Reopen the activity to change its date.</p>{% endif %}
+    <p class="meta">Times are in {{ v.a.timezone }}. Changing the date marks it as your schedule.</p>
+    <label>Format <input name="format" value="{{ v.a.format }}" maxlength="40"></label>
+    <label>Purpose <textarea name="purpose" rows="3" maxlength="2000">{{ v.a.purpose }}</textarea></label>
+    <details{% if v.a.brief %} open{% endif %}><summary>Brief, call to action and checklist</summary>
+      <label>Brief <textarea name="brief" rows="6" maxlength="10000">{{ v.a.brief }}</textarea></label>
+      <label>Call to action <input name="cta" value="{{ v.a.cta }}" maxlength="300"></label>
+      <label>Checklist <textarea name="checklist" rows="3" placeholder="One item per line">{{ v.a.checklist|join:"&#10;" }}</textarea></label>
+    </details>
+    <label>Effort (minutes) <input type="number" name="effort_minutes" min="0" value="{{ v.a.effort_minutes }}"></label>
+    <p class="form-error" role="alert"></p>
+  </form>
+</div>
+<footer class="modal-foot">
+  <button class="button subtle" type="button" data-dialog-back>Cancel</button>
+  <button class="button primary" type="submit" form="activity-edit-form">Save</button>
+</footer>
+</div>

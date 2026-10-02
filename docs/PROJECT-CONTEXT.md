@@ -23,7 +23,7 @@ The user decides at every step. The app drafts and records work; it never publis
 | Live progress checkpoint | `execution/AGENT-STATE.json` |
 | Engineering decisions made during build | `docs/adr/` |
 
-The private handoff root (`handoff/`, Git-ignored) additionally holds the v4 prototype, original POCs, the real Spotify import investigation, the real CSVs and the archive. Those prove only what their READMEs state. `archive/` is history, never instructions.
+The private handoff root (`~/Downloads/band-evidence-development-handoff/`, outside the repository) additionally holds the v4 prototype, original POCs, the real Spotify import investigation, the real CSVs and the archive. Those prove only what their READMEs state. `archive/` is history, never instructions.
 
 ## Settled, do not reopen
 
@@ -58,15 +58,16 @@ An **Artist** (own, or reviewed peer) has **Promoted objects** (recording, relea
 | `docs/handoff/` | Byte-identical normative copy | Yes |
 | `docs/PROJECT-CONTEXT.md`, `docs/adr/`, `docs/reports/` | Context, decisions, stage and verification reports | Yes |
 | `execution/AGENT-STATE.json` | Resumable checkpoint | Yes |
-| application source, migrations, tests | Created in S1-01 | Yes |
-| `handoff/` | Private full handoff, read-only | No (ignored) |
-| Owner `DATA_ROOT` | `app.sqlite3`, `instance.json`, `imports/`, `assets/`, `backups/` etc. Default proposal: `~/Library/Application Support/BandEvidence/` | No, outside repo |
-| Test/synthetic roots | Temporary directories per run | No |
-| Real CSV regression fixtures | Read in place from `handoff/data/real-inputs/` via an explicit path setting; never copied into the repo or seeded | No |
+| `bandevidence/`, `core/`, `catalogue/`, `sources/`, `campaigns/`, `evaluation/`, `web/` | Django project and apps | Yes |
+| `bin/band-evidence`, `tests/` | Launcher; unit, process and browser tests | Yes |
+| `~/Downloads/band-evidence-development-handoff/` | Private full handoff, read-only | No, outside repo |
+| Owner data root | `app.sqlite3`, `instance.json`, `secret_key`, `imports/`, `backups/`, `run/`. Set by `BAND_EVIDENCE_DATA_ROOT`; default `~/Library/Application Support/BandEvidence/`; refused inside the repo | No, outside repo |
+| Test/synthetic roots | Temporary directories per run, marked synthetic | No |
+| Real CSV regression fixtures | Read in place from the handoff's `data/real-inputs/` via `BAND_EVIDENCE_REAL_FIXTURES`; never copied into the repo or seeded. Unset means those tests report Not run | No |
 
 ## Environment (recorded 2 Oct 2026)
 
-macOS 15.7.4 on arm64. Python 3.14.4 (Homebrew) linking SQLite 3.53.0, which is at or above the documented WAL-reset fix (3.51.3). The system `sqlite3` CLI is 3.43.2, below the fix: do not use it against a live WAL database. Node v23.10.0 is a non-LTS release, used only for reference suites; choose an audited LTS runtime if a browser test runner needs Node. No production dependencies are installed yet.
+macOS 15.7.4 on arm64. Python 3.14.4 (Homebrew) linking SQLite 3.53.0, which is at or above the documented WAL-reset fix (3.51.3). The system `sqlite3` CLI is 3.43.2, below the fix: do not use it against a live WAL database. Node v23.10.0 is a non-LTS release, used only for reference suites; the browser tests use Python Playwright with installed Chrome, so no Node is needed. Runtime dependencies (Django 5.2.17, asgiref, sqlparse, waitress) are hash-pinned and audited in `docs/dependencies.json`; stack decisions are in `docs/adr/0001-stack-storage-access.md`.
 
 ## Working rules worth repeating
 

@@ -9,7 +9,7 @@ from django.db.models import Q
 from catalogue.models import Entity, PromotedObject
 from catalogue.services import create_object, own_artist, parse_date
 from core import clock, instance
-from core.errors import DomainError
+from core.errors import DomainError, StaleRevision
 from core.services import audit, conditional_update, idempotent
 from sources.models import MetricDefinition, Source
 
@@ -172,7 +172,7 @@ def preview_operational(data):
     assets = resources.get("assets_ready_date")
     if assets and key_date and assets > key_date:
         gaps.append("Assets are ready after the key date. Plan content after the assets date.")
-    gaps.insert(0, "No eligible evidence yet, so no evidence-backed tactics are proposed. Add your own activities; Stage 2 sources unlock findings.")
+    gaps.insert(0, "No eligible evidence yet, so no evidence-backed tactics are proposed. Add your own activities below.")
     return {"activities": sorted(items, key=lambda i: i["date"]), "gaps": gaps, "template_version": registry.TEMPLATE_VERSION}
 
 
@@ -438,6 +438,8 @@ def execute(activity_id, expected_revision, action, idempotency_key, actual_at=N
         _campaign_allows_work(activity.campaign)
         if activity.campaign.status == "draft":
             raise DomainError("campaign_draft", "Activate the campaign before recording execution.", status=409)
+        if activity.revision != expected_revision:
+            raise StaleRevision("activity")
         prior = activity.status
         now = clock.now()
         fields = {}
@@ -487,6 +489,8 @@ def execute(activity_id, expected_revision, action, idempotency_key, actual_at=N
 def set_status(campaign_id, expected_revision, new_status, reason, idempotency_key):
     def run():
         campaign = Campaign.objects.get(pk=campaign_id)
+        if campaign.revision != expected_revision:
+            raise StaleRevision("campaign")
         if (campaign.status, new_status) not in TRANSITIONS:
             raise DomainError("invalid_transition", f"A {campaign.status} campaign cannot become {new_status}.", status=409)
         text = (reason or "").strip()

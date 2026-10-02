@@ -1,0 +1,5 @@
+<div class="tabs" role="tablist" aria-label="Evidence" data-evidence-tabs>
+  {% for key, label in tabs %}
+  <a class="tab" role="tab" id="tab-{{ key }}" href="/evidence/{{ key }}" data-tab="{{ key }}" aria-selected="{% if tab == key %}true{% else %}false{% endif %}"{% if tab == key %} aria-current="page"{% endif %}>{{ label }}</a>
+  {% endfor %}
+</div>

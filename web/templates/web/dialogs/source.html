@@ -1,0 +1,14 @@
+{% load be %}<div class="frame" data-frame data-title="Source">
+{% include "web/dialogs/_head.html" with heading=s.label eyebrow="Source" %}
+<div class="modal-body" tabindex="0">
+  <dl class="facts">
+    <div><dt>Route</dt><dd>{{ s.capability.route|default:s.route }}</dd></div>
+    {% if s.capability.automatic_retrieval %}<div><dt>Automatic retrieval</dt><dd>Not available. {{ s.capability.automatic_retrieval.reason }}</dd></div>{% endif %}
+    {% if policy %}<div><dt>Use policy</dt><dd>v{{ policy.version }}: {% for k, state in policy.purposes.items %}{{ k|humanise }} {% if state == "allowed" %}allowed{% else %}not permitted yet{% endif %}{% if not forloop.last %}; {% endif %}{% endfor %}</dd></div>{% endif %}
+  </dl>
+  <h3 class="h4">Coverage</h3>
+  <ul class="plain">{% for r in coverage %}<li>{{ r.metric.label }}, {{ r.entity.label }}: {{ r.days }} days to {{ r.through|day }}{% if r.missing %}, {{ r.missing }} missing{% endif %}</li>{% empty %}<li class="empty-line">No data imported from this source.</li>{% endfor %}</ul>
+  <h3 class="h4">Recent imports</h3>
+  <ul class="plain">{% for b in batches %}<li><a href="/sources/imports/{{ b.pk }}">{{ b.original_name }}</a>, {{ b.committed_at|local }}</li>{% empty %}<li class="empty-line">None.</li>{% endfor %}</ul>
+</div>
+</div>

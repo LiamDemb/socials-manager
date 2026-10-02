@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# Band Evidence launcher. Local loopback app; data lives outside this folder.
+set -euo pipefail
+
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+VENV="$APP_DIR/.venv"
+PY="$VENV/bin/python"
+DATA_ROOT="${BAND_EVIDENCE_DATA_ROOT:-$HOME/Library/Application Support/BandEvidence}"
+export BAND_EVIDENCE_DATA_ROOT="$DATA_ROOT"
+cd "$APP_DIR"
+
+need_venv() {
+  if [[ ! -x "$PY" ]]; then
+    echo "Not set up yet. Run: bin/band-evidence setup" >&2
+    exit 1
+  fi
+}
+
+usage() {
+  cat <<EOF
+Usage: bin/band-evidence <command>
+
+  setup [--test]          Create .venv and install hash-pinned dependencies (--test adds browser-test tools)
+  init --artist NAME [--timezone Australia/Perth]
+                          Create a new installation in the data folder
+  start [--port 8765]     Apply upgrades (with a backup first), start the worker and open the app on 127.0.0.1
+  backup [--list]         Make a verified backup now, or list backups
+  restore BACKUP_DIR [--promote]
+                          Restore into a new folder and verify it; --promote switches to it (stop the app first)
+  status                  Show diagnostics
+  test                    Run the automated checks (browser checks need: setup --test)
+
+Data folder: $DATA_ROOT
+EOF
+}
+
+cmd="${1:-help}"
+shift || true
+
+case "$cmd" in
+  setup)
+    PYTHON_BIN="${PYTHON:-$(command -v python3.14 || true)}"
+    if [[ -z "$PYTHON_BIN" ]]; then
+      echo "Python 3.14 is required (for example: brew install python@3.14)." >&2
+      exit 1
+    fi
+    [[ -x "$PY" ]] || "$PYTHON_BIN" -m venv "$VENV"
+    "$PY" -m pip install --disable-pip-version-check --require-hashes --no-deps -r requirements.txt
+    if [[ "${1:-}" == "--test" ]]; then
+      "$PY" -m pip install --disable-pip-version-check --require-hashes --no-deps -r requirements-test.txt
+    fi
+    echo "Setup complete."
+    ;;
+  init)
+    need_venv
+    "$PY" manage.py init_instance "$@"
+    ;;
+  start)
+    need_venv
+    "$PY" manage.py upgrade
+    mkdir -p "$DATA_ROOT/run"
+    "$PY" manage.py run_worker >>"$DATA_ROOT/run/worker.log" 2>&1 &
+    WORKER_PID=$!
+    echo "$WORKER_PID" >"$DATA_ROOT/run/worker.pid"
+    "$PY" manage.py serve "$@" &
+    SERVER_PID=$!
+    # Background children ignore SIGINT in a non-interactive shell, so stop them with SIGTERM.
+    cleanup() {
+      trap - EXIT INT TERM
+      kill -TERM "$SERVER_PID" "$WORKER_PID" 2>/dev/null || true
+      wait "$SERVER_PID" "$WORKER_PID" 2>/dev/null || true
+      rm -f "$DATA_ROOT/run/worker.pid"
+      echo "Band Evidence stopped."
+    }
+    trap cleanup EXIT INT TERM
+    wait "$SERVER_PID" || true
+    ;;
+  backup)
+    need_venv
+    "$PY" manage.py backup "$@"
+    ;;
+  restore)
+    need_venv
+    "$PY" manage.py restore "$@"
+    ;;
+  status)
+    need_venv
+    "$PY" manage.py diagnostics
+    ;;
+  test)
+    need_venv
+    "$PY" manage.py test tests "$@"
+    ;;
+  help|-h|--help)
+    usage
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac

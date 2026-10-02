@@ -1,0 +1,25 @@
+{% load be %}<div class="frame" data-frame data-title="{% if obj %}{{ obj.label }}{% else %}Add item{% endif %}">
+{% include "web/dialogs/_head.html" with heading=obj.label|default:"Add to catalogue" eyebrow=obj.get_kind_display %}
+<div class="modal-body" tabindex="0">
+  <form id="object-form" data-api="{% if obj %}/api/objects/{{ obj.pk }}{% else %}/api/objects{% endif %}" data-after="close" class="stack">
+    {% if obj %}<input type="hidden" name="revision" value="{{ obj.revision }}">{% else %}
+    <label>Type <select name="kind">{% for k, label in kinds %}<option value="{{ k }}">{{ label }}</option>{% endfor %}</select></label>
+    {% endif %}
+    <label>Name <input name="label" value="{{ obj.label|default:'' }}" required maxlength="200"></label>
+    <label>Key date <input type="date" name="key_date" value="{{ obj.key_date|date:'Y-m-d' }}"><span class="hint">Release, show, premiere or launch date</span></label>
+    <label class="check"><input type="checkbox" name="date_confirmed" value="1"{% if obj.date_authority == "owner_confirmed" %} checked{% endif %}> This date is confirmed</label>
+    {% if not obj or obj.kind == "recording" or obj.kind == "release" %}
+    <label>Spotify link <input type="url" name="spotify_url" placeholder="https://open.spotify.com/track/…"><span class="hint">{% for key, i in ids.items %}{% if i.provider == "spotify" %}Current: {{ i.external_id }}{% endif %}{% empty %}Optional. A track or album link confirms identity.{% endfor %}</span></label>
+    {% endif %}
+    {% if not obj or obj.kind == "recording" %}
+    <label>ISRC <input name="isrc" maxlength="20" placeholder="AU-XXX-26-00001">{% for key, i in ids.items %}{% if i.provider == "isrc" %}<span class="hint">Current: {{ i.external_id }}</span>{% endif %}{% endfor %}</label>
+    {% endif %}
+    {% if obj %}<p class="meta">Identity: {{ obj.get_identity_state_display }}. A recording is confirmed when it has a Spotify track link or ISRC and a confirmed date. Changing the date flags planned work for review.</p>{% endif %}
+    <p class="form-error" role="alert"></p>
+  </form>
+</div>
+<footer class="modal-foot">
+  <button class="button subtle" type="button" data-dialog-close>Cancel</button>
+  <button class="button primary" type="submit" form="object-form">Save</button>
+</footer>
+</div>

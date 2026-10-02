@@ -1,0 +1,34 @@
+{% load be %}<div class="frame" data-frame data-title="Add outcome">
+{% include "web/dialogs/_head.html" with heading="Add a supporting outcome" eyebrow=c.name %}
+<div class="modal-body" tabindex="0">
+  {% if candidates %}
+  <form data-api="/api/campaigns/{{ c.pk }}/outcomes" data-after="close" class="stack">
+    <label>Link an existing outcome
+      <select name="outcome_version_id">{% for x in candidates %}<option value="{{ x.ov.pk }}">{{ x.label }} · {{ x.ov.scope_entity.label }} · {{ x.ov.period_start|short_day }} to {{ x.end|short_day }}</option>{% endfor %}</select>
+    </label>
+    <p class="meta">Linking shares one outcome contract. It is counted once wherever it appears.</p>
+    <div class="actions"><button class="button" type="submit">Link outcome</button></div>
+    <p class="form-error" role="alert"></p>
+  </form>
+  <hr>
+  {% endif %}
+  <form id="outcome-new-form" data-api="/api/campaigns/{{ c.pk }}/outcomes" data-after="close" class="stack">
+    <label>Measure
+      <select name="metric_id" data-metric-select required>{% for m in metrics %}<option value="{{ m.pk }}" data-modes="{{ m.outcome_modes|join:'|' }}">{{ m.label }}</option>{% endfor %}</select>
+    </label>
+    <div class="row">
+      <label>Type <select name="outcome_mode" data-mode-select><option value="total">Total in window</option><option value="gain">Gain from start</option><option value="level">Reach a level</option></select></label>
+      <label>Target <input type="number" name="target" min="0" required></label>
+    </div>
+    <div class="row">
+      <label>From <input type="date" name="period_start" value="{{ c.start_date|date:'Y-m-d' }}"></label>
+      <label>Last day <input type="date" name="last_day" value="{{ c.end_date|date:'Y-m-d' }}"></label>
+    </div>
+    <p class="form-error" role="alert"></p>
+  </form>
+</div>
+<footer class="modal-foot">
+  <button class="button subtle" type="button" data-dialog-close>Cancel</button>
+  <button class="button primary" type="submit" form="outcome-new-form">Add outcome</button>
+</footer>
+</div>

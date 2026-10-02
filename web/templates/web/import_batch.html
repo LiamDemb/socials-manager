@@ -1,0 +1,105 @@
+{% extends "web/base.html" %}{% load be %}
+{% block heading %}Import preview{% endblock %}
+{% block content %}
+<a class="back-link" href="/sources">‹ Sources</a>
+<section class="section card">
+  <div class="section-head">
+    <h2 class="h3 wrap">{{ batch.original_name }}</h2>
+    <span class="badge tone-{% if batch.state == 'committed' %}good{% elif batch.state == 'staged' %}warn{% elif batch.state == 'invalid' %}bad{% else %}muted{% endif %}">{% if batch.state == "staged" %}Preview, nothing stored yet{% else %}{{ batch.state|capfirst }}{% endif %}</span>
+  </div>
+  <dl class="facts">
+    <div><dt>File type</dt><dd>{% if batch.scope == "artist" %}Audience timeline (whole artist){% elif batch.scope == "recording" %}Song streams timeline (one recording){% else %}Not recognised{% endif %}</dd></div>
+    <div><dt>Rows</dt><dd>{{ batch.summary.source_rows|default:0|num }} rows, {{ batch.summary.metric_values|default:0|num }} values{% if batch.summary.first_date %}, {{ batch.summary.first_date|day }} to {{ batch.summary.last_date|day }} (UTC){% endif %}</dd></div>
+    <div><dt>Metrics</dt><dd>{{ metrics|join:", "|default:"None" }}</dd></div>
+    <div><dt>Original file</dt><dd>Kept unchanged · SHA-256 <code class="hash">{{ batch.raw_file.sha256|slice:":16" }}…</code> · <a href="/sources/imports/{{ batch.pk }}/download/original">Download original</a></dd></div>
+    {% if batch.mapped_entity %}<div><dt>Measures</dt><dd>{{ batch.mapped_entity.label }}</dd></div>{% endif %}
+  </dl>
+</section>
+
+{% if batch.state == "invalid" %}
+<section class="section card tone-border-bad">
+  <h2 class="h3">This file cannot be imported</h2>
+  <p>Nothing was stored as data. Fix the file or export it again, then upload it.</p>
+  <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Row</th><th scope="col">Column</th><th scope="col">Problem</th></tr></thead>
+  <tbody>{% for i in issues %}<tr><td>{{ i.row_number|default:"" }}</td><td>{{ i.column }}</td><td>{{ i.message }}</td></tr>{% endfor %}</tbody></table></div>
+  <form data-api="/api/imports/{{ batch.pk }}/cancel" data-after="navigate"><button class="button" type="submit">Discard preview</button><p class="form-error" role="alert"></p></form>
+</section>
+{% endif %}
+
+{% if batch.state == "staged" %}
+  {% if batch.scope == "recording" %}
+  <section class="section card">
+    <h2 class="h3">Which recording does this file measure?</h2>
+    <p class="meta">The file name suggests “{{ suggested }}”, but a name is not proof of identity. Choose the recording, or add it to your catalogue. You can confirm its Spotify link and release date in Settings.</p>
+    <form data-api="/api/imports/{{ batch.pk }}/mapping" data-after="reload" class="stack">
+      <input type="hidden" name="revision" value="{{ batch.preview_revision }}">
+      {% if recordings %}
+      <label class="radio"><input type="radio" name="target" value="existing"{% if recordings %} checked{% endif %}> An existing recording</label>
+      <label class="indent">Recording
+        <select name="entity_id">{% for r in recordings %}<option value="{{ r.pk }}"{% if batch.mapped_entity_id == r.pk %} selected{% endif %}>{{ r.label }}{% if r.identity_state == "pending" %} (identity pending){% endif %}</option>{% endfor %}</select>
+      </label>
+      {% endif %}
+      <label class="radio"><input type="radio" name="target" value="new"{% if not recordings %} checked{% endif %}> A new recording</label>
+      <label class="indent">Name <input name="new_label" value="{{ suggested }}" maxlength="200"></label>
+      <div class="actions"><button class="button" type="submit">{% if batch.mapped_entity %}Change recording{% else %}Use this recording{% endif %}</button></div>
+      <p class="form-error" role="alert"></p>
+    </form>
+  </section>
+  {% endif %}
+
+  {% if batch.mapped_entity %}
+  <section class="section card">
+    <h2 class="h3">What this import will change</h2>
+    <ul class="counts">
+      <li><strong>{{ batch.summary.new|num }}</strong> new values</li>
+      <li><strong>{{ batch.summary.equal|num }}</strong> already stored and unchanged</li>
+      <li><strong>{{ batch.summary.conflict|num }}</strong> different from stored values{% if batch.summary.conflict %} ({{ batch.summary.approved_conflicts }} approved){% endif %}</li>
+    </ul>
+    {% if conflicts %}
+      <h3 class="h4">Values that differ</h3>
+      <p class="meta">Spotify sometimes restates past days. Approving keeps the stored value as history and records the new one as a revision.</p>
+      <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Day</th><th scope="col">Metric</th><th scope="col" class="num">Stored</th><th scope="col" class="num">In this file</th></tr></thead>
+      <tbody>{% for s in conflicts %}<tr><td>{{ s.period_start|day }}</td><td>{{ s.metric.label }}</td><td class="num">{{ s.existing_version.value|num }}</td><td class="num">{{ s.value|num }}{% if s.approved %} <span class="badge tone-good">Approved</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+      {% if batch.summary.approved_conflicts < batch.summary.conflict %}
+      <form data-api="/api/imports/{{ batch.pk }}/approve" data-after="reload" class="stack">
+        <input type="hidden" name="revision" value="{{ batch.preview_revision }}">
+        <label>Why are the new values correct? <textarea name="reason" rows="2" required maxlength="500"></textarea></label>
+        <div class="actions"><button class="button" type="submit">Approve revisions</button></div>
+        <p class="form-error" role="alert"></p>
+      </form>
+      {% endif %}
+    {% endif %}
+    <form data-api="/api/imports/{{ batch.pk }}/commit" data-after="reload" class="actions">
+      <input type="hidden" name="revision" value="{{ batch.preview_revision }}">
+      <button class="button primary" type="submit"{% if batch.summary.approved_conflicts < batch.summary.conflict %} disabled{% endif %}>Import {{ batch.summary.new|add:batch.summary.approved_conflicts|num }} value{{ batch.summary.new|add:batch.summary.approved_conflicts|pluralize }}</button>
+      <p class="form-error" role="alert"></p>
+    </form>
+  </section>
+  {% endif %}
+  <form data-api="/api/imports/{{ batch.pk }}/cancel" data-after="navigate" class="actions"><button class="button subtle" type="submit">Discard preview</button><p class="form-error" role="alert"></p></form>
+{% endif %}
+
+{% if batch.state == "committed" %}
+<section class="section card">
+  <h2 class="h3">Imported</h2>
+  <p>{{ batch.summary.committed.new_facts|num }} new values, {{ batch.summary.committed.revisions|num }} revisions and {{ batch.summary.committed.unchanged|num }} unchanged, {{ batch.committed_at|local }}.</p>
+  <p class="links"><a href="/sources/imports/{{ batch.pk }}/download/source">Download as Spotify-shaped CSV</a> · <a href="/sources/imports/{{ batch.pk }}/download/common">Download in common format</a> · <a href="/evidence/data?entity={{ batch.mapped_entity_id }}">Observed data</a></p>
+  <details>
+    <summary>Undo this import</summary>
+    <form data-api="/api/imports/{{ batch.pk }}/undo" data-after="reload" class="stack">
+      <p class="meta">Removes only what this import contributed. Values also supported by another import stay. History is kept.</p>
+      <label>Reason <textarea name="reason" rows="2" required maxlength="500"></textarea></label>
+      <div class="actions"><button class="button danger" type="submit">Undo import</button></div>
+      <p class="form-error" role="alert"></p>
+    </form>
+  </details>
+</section>
+{% endif %}
+
+{% if batch.state == "undone" %}
+<section class="section card"><h2 class="h3">Undone</h2><p>{{ batch.undone_at|local }}: {{ batch.undo_reason }}</p></section>
+{% endif %}
+{% if batch.state == "rejected" %}
+<section class="section card"><h2 class="h3">Discarded</h2><p>This preview was discarded. Nothing was stored as data.</p></section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,21 @@
+{% load be %}<div class="frame" data-frame data-title="Outcome">
+{% include "web/dialogs/_head.html" with heading=ov.metric.label eyebrow="Outcome" %}
+<div class="modal-body" tabindex="0">
+  <p><span class="badge tone-{{ tone }}">{{ status_label }}</span>
+    {% if progress.value is not None %}{{ progress.value|num }} of {{ ov.target|num }}{% else %}Target {{ ov.target|num }}{% endif %}</p>
+  <dl class="facts">
+    <div><dt>Measures</dt><dd>{{ ov.get_mode_display }} of {{ ov.metric.label|lower }} for {{ ov.scope_entity.label }}</dd></div>
+    <div><dt>Window</dt><dd>{{ ov.period_start|day }} to {{ window_end|day }}{% if ov.date_basis == "utc_day" %} (Spotify UTC days){% endif %}</dd></div>
+    {% if progress.baseline is not None %}<div><dt>Starting snapshot</dt><dd>{{ progress.baseline|num }} on {{ progress.baseline_date|day }}</dd></div>{% endif %}
+    {% if progress.data_through %}<div><dt>Data through</dt><dd>{{ progress.data_through|day }}</dd></div>{% endif %}
+    {% if progress.required_days %}<div><dt>Coverage</dt><dd>{{ progress.observed_days }} of {{ progress.required_days }} days so far{% if progress.missing_days %}; missing {{ progress.missing_days|length }}{% endif %}</dd></div>{% endif %}
+    {% if progress.pace_guide is not None %}<div><dt>Straight-line pace</dt><dd>{{ progress.pace_guide|floatformat:0 }} by now. A guide only, not a forecast.</dd></div>{% endif %}
+    <div><dt>Rule</dt><dd>{{ progress.rule_version }}. {{ ov.metric.definition }}</dd></div>
+  </dl>
+  {% for n in progress.notes %}<p class="meta">{{ n }}</p>{% endfor %}
+  {% if progress.status == "needs_source" %}<p>No connected source measures this, so progress is not zero but unknown. <a href="/sources">Sources</a></p>{% endif %}
+  <p class="meta">Linked campaigns: {% for c in campaigns %}<a href="/campaigns/{{ c.pk }}/outcomes">{{ c.name }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}. Shared outcomes count once.</p>
+  {% if source %}<p class="meta">Source: <a href="/ui/source/{{ source.pk }}" data-dialog-push>{{ source.label }}</a></p>{% endif %}
+  {% if progress.status != "needs_source" %}<p class="meta"><a href="/evidence/data/{{ ov.scope_entity_id }}/{{ ov.metric_id }}">Underlying data</a></p>{% endif %}
+</div>
+</div>

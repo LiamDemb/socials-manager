@@ -37,7 +37,7 @@ def handle_outbox(limit=50):
     for event in OutboxEvent.objects.filter(handled_at__isnull=True).order_by("created_at")[:limit]:
         with transaction.atomic():
             if OutboxEvent.objects.filter(pk=event.pk, handled_at__isnull=True).update(handled_at=clock.now()) == 1:
-                audit("outbox", event.pk, f"handled.{event.kind}", {"invalidated": [], "note": "No derived findings in Stage 1"}, actor="system")
+                audit("outbox", event.pk, f"handled.{event.kind}", {"invalidated": [], "note": "No derived findings yet"}, actor="system")
                 handled += 1
     return handled
 

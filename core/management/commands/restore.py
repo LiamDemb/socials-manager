@@ -15,10 +15,15 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("backup_dir")
-        parser.add_argument("--to", required=True, help="New, empty folder to restore into")
+        parser.add_argument("--to", help="New, empty folder to restore into (default: beside the data root)")
         parser.add_argument("--promote", action="store_true", help="After verification, replace the active data root (app must be stopped)")
 
     def handle(self, backup_dir, to, promote, **opts):
+        if not to:
+            from core import clock
+
+            active = data_root()
+            to = str(active.with_name(f"{active.name}.restore-{clock.now().strftime('%Y%m%dT%H%M%SZ')}"))
         try:
             report = backup.restore_to(Path(backup_dir), Path(to))
         except (RuntimeError, FileNotFoundError) as exc:

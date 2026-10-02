@@ -1,0 +1,13 @@
+{% load be %}<div class="frame" data-frame data-title="Timing">
+{% include "web/dialogs/_head.html" with heading="Timing" eyebrow=v.a.title %}
+<div class="modal-body" tabindex="0">
+  <dl class="facts">
+    <div><dt>Planned</dt><dd>{% if v.day %}{{ v.day|day }}{% if v.time %}, {{ v.time }} {{ v.a.timezone }}{% else %}, all day in {{ v.a.timezone }}{% endif %}{% else %}Not scheduled{% endif %}</dd></div>
+    {% if v.a.planned_at_utc %}<div><dt>Stored as</dt><dd>{{ v.a.planned_at_utc|date:"Y-m-d H:i" }} UTC</dd></div>{% endif %}
+    <div><dt>Basis</dt><dd>{{ v.a.origin_detail.basis|default:"Your schedule" }}</dd></div>
+    <div><dt>State</dt><dd>{{ v.state }}</dd></div>
+  </dl>
+  <p class="meta">{% if v.time %}A timed activity becomes overdue at its planned time.{% else %}An all-day activity is due all day and becomes overdue at midnight at the end of that day.{% endif %} Missed work is never moved automatically.</p>
+  <p class="meta">No timing evidence is available yet, so the time is your choice rather than a recommendation.</p>
+</div>
+</div>

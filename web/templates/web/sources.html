@@ -1,0 +1,68 @@
+{% extends "web/base.html" %}{% load be %}
+{% block actions %}<a class="button primary" href="/ui/upload" data-dialog-open>Import CSV</a>{% endblock %}
+{% block content %}
+<section class="section card source-card">
+  <div class="section-head">
+    <h2>Spotify for Artists</h2>
+    <span class="badge tone-good">Reviewed CSV import</span>
+  </div>
+  <dl class="facts">
+    <div><dt>How data arrives</dt><dd>You export CSVs from Spotify for Artists and import them here. Each file is previewed before anything is stored as data.</dd></div>
+    <div><dt>Automatic retrieval</dt><dd><span class="badge tone-muted">Not available</span> {{ spotify.capability.automatic_retrieval.reason }}</dd></div>
+  </dl>
+  <details>
+    <summary>How to export the files</summary>
+    <ol class="steps">
+      <li>Open Spotify for Artists on a computer and choose <strong>Audience</strong>. Set the range to the longest available, then <strong>Export</strong> the timeline CSV. This covers the whole artist.</li>
+      <li>For a song, open <strong>Music</strong>, choose the song, set the range, then export its streams timeline CSV.</li>
+      <li>Import each file here. A song file is matched to the recording you choose; its file name is only a suggestion.</li>
+    </ol>
+  </details>
+  <details>
+    <summary>Supported metrics and use policy</summary>
+    <ul class="plain">{% for name, state in spotify.capability.metrics.items %}<li><strong>{{ name }}</strong>: {{ state }}</li>{% endfor %}</ul>
+    <h3 class="h4">Use policy v{{ policy.version }}</h3>
+    <ul class="policy">{% for purpose, state in purposes %}<li><span>{{ purpose|humanise }}</span><span class="badge tone-{% if state == 'allowed' %}good{% else %}warn{% endif %}">{% if state == "allowed" %}Allowed{% else %}Not permitted yet{% endif %}</span></li>{% endfor %}</ul>
+    <p class="meta">{{ policy.conditions }}</p>
+  </details>
+</section>
+
+<section class="section">
+  <div class="section-head"><h2>Coverage</h2>{% if coverage %}<a class="meta" href="/sources/export.csv">Download all observations (CSV)</a>{% endif %}</div>
+  {% if coverage %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th scope="col">Metric</th><th scope="col">Item</th><th scope="col">Days</th><th scope="col">Gaps</th><th scope="col">Freshness</th></tr></thead>
+    <tbody>{% for r in coverage %}<tr>
+      <td><a href="/evidence/data/{{ r.entity.pk }}/{{ r.metric.pk }}">{{ r.metric.label }}</a></td><td>{{ r.entity.label }}</td><td>{{ r.days|num }}</td>
+      <td>{% if r.missing %}{{ r.missing }} missing{% else %}None{% endif %}</td><td class="fresh-{{ r.fresh.state }}">{{ r.fresh.label }}</td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}
+  <div class="empty"><h3>No data imported</h3><p>Import an Audience timeline first, then any song timelines.</p><a class="button primary" href="/ui/upload" data-dialog-open>Import CSV</a></div>
+  {% endif %}
+</section>
+
+<section class="section">
+  <div class="section-head"><h2>Other sources</h2></div>
+  <div class="card-grid">
+    <article class="card"><h3>Instagram</h3><span class="badge tone-muted">Not set up</span><p class="meta">Needs the band's own professional account and an owner-authorised Meta app. Instagram follower outcomes show Needs source until then.</p></article>
+    <article class="card"><h3>Pre-saves</h3><span class="badge tone-muted">Not set up</span><p class="meta">No pre-save provider is connected. Artist saves and playlist adds are not pre-saves.</p></article>
+    <article class="card"><h3>Ticket sales</h3><span class="badge tone-muted">Not set up</span><p class="meta">Needs an event-scoped sales report from your ticketing provider.</p></article>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head"><h2>Imports</h2></div>
+  {% if batches %}
+  <div class="table-wrap"><table class="data">
+    <thead><tr><th scope="col">File</th><th scope="col">Measures</th><th scope="col">State</th><th scope="col">Rows</th><th scope="col">Received</th></tr></thead>
+    <tbody>{% for b in batches %}<tr>
+      <td><a href="/sources/imports/{{ b.pk }}">{{ b.original_name }}</a></td>
+      <td>{% if b.mapped_entity %}{{ b.mapped_entity.label }}{% elif b.scope == "recording" %}<span class="muted">Choose a recording</span>{% else %}{{ b.scope|default:"Unknown" }}{% endif %}</td>
+      <td><span class="badge tone-{% if b.state == 'committed' %}good{% elif b.state == 'staged' %}warn{% elif b.state == 'invalid' %}bad{% else %}muted{% endif %}">{% if b.state == "staged" %}Preview{% else %}{{ b.state|capfirst }}{% endif %}</span></td>
+      <td>{{ b.summary.source_rows|default:"" }}</td><td>{{ b.created_at|local }}</td>
+    </tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="empty-line">No imports yet.</p>{% endif %}
+</section>
+{% endblock %}

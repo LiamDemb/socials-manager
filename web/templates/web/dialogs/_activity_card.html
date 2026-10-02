@@ -1,0 +1,21 @@
+{% load be %}<article class="card proposal" data-activity-card data-origin="{% if manual %}manual{% else %}operational_template{% endif %}" data-template-key="{{ item.template_key|default:'' }}" data-kind="{{ item.kind|default:'content' }}" data-effort="{{ item.effort_minutes|default:30 }}" data-basis="{{ item.basis|default:'Your schedule' }}">
+  <div class="proposal-head">
+    <label class="check"><input type="checkbox" data-field="selected" checked> <span class="sr-only">Include</span></label>
+    <input class="title-input" data-field="title" value="{{ item.title|default:'' }}" aria-label="Activity title" placeholder="Activity title" maxlength="200">
+    {% if manual %}<button class="button subtle small" type="button" data-remove-card>Remove</button>{% endif %}
+  </div>
+  <div class="proposal-meta row">
+    <label>Date <input type="date" data-field="date" value="{{ item.date|default:'' }}"></label>
+    <label>Time <input type="time" data-field="time" value="{% if manual %}{{ default_time }}{% else %}{{ item.time|default:'' }}{% endif %}"></label>
+    <label>Channel
+      <select data-field="channel">
+        <option value="">None</option>
+        {% for key, label, formats in channels %}{% if key != "email" or resources.email_list_confirmed %}<option value="{{ key }}"{% if item.channel == key %} selected{% endif %}>{{ label }}</option>{% endif %}{% endfor %}
+      </select>
+    </label>
+    <label>Format <input data-field="format" value="{{ item.format|default:'' }}" maxlength="40"></label>
+  </div>
+  <p class="meta"><span class="badge tone-muted">{% if manual %}Your schedule{% else %}{{ item.basis }}{% endif %}</span>{% if item.kind == "milestone" %} Fixed date{% endif %}</p>
+  {% if manual %}<label>Purpose <textarea data-field="purpose" rows="2" maxlength="2000"></textarea></label>
+  {% elif item.purpose %}<details><summary>Purpose</summary><textarea data-field="purpose" rows="2" maxlength="2000" aria-label="Purpose">{{ item.purpose }}</textarea></details>{% endif %}
+</article>

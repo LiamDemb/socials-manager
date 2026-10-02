@@ -35,7 +35,7 @@ DEFINITIONS = [
     # Outcome contracts that need a source not yet connected. They yield "Needs source", never zero.
     dict(id="instagram.account.followers.v1", provider="instagram", code="account.followers", version=1, label="Instagram followers",
          grain="snapshot", kind="stock", scope_kind="artist", outcome_modes=["gain", "level"],
-         definition="Own professional account follower total at collection time. Needs an authorised Instagram source (Stage 2)."),
+         definition="Own professional account follower total at collection time. Needs an authorised Instagram source."),
     dict(id="presave.release.confirmed.v1", provider="presave_provider", code="release.confirmed_presaves", version=1,
          label="Confirmed pre-saves", grain="snapshot", kind="cumulative", scope_kind="recording", outcome_modes=["level"],
          definition="Provider-confirmed pre-saves for one identified release. Clicks, saves and playlist adds are different metrics."),

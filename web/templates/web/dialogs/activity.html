@@ -1,0 +1,89 @@
+{% load be %}<div class="frame" data-frame data-title="Activity" data-key="activity:{{ v.a.pk }}">
+{% include "web/dialogs/_head.html" with heading=v.a.title eyebrow=v.a.campaign.name %}
+<div class="modal-body" tabindex="0">
+  <p class="activity-when">
+    <span class="badge tone-{{ v.tone }}">{{ v.state }}</span>
+    {% if v.day %}{{ v.day|day }}{% if v.time %}, {{ v.time }}{% else %}, all day{% endif %}{% else %}No date{% endif %}
+    · <a href="/ui/activity/{{ v.a.pk }}/timing" data-dialog-push>Timing</a>
+  </p>
+  {% if v.a.review_flag %}<div class="alert tone-warn" role="status">{{ v.a.review_flag }}. Check the date; nothing was moved.</div>{% endif %}
+
+  <section class="group">
+    <h3 class="group-title">Making</h3>
+    <dl class="facts compact">
+      {% if v.a.channel %}<div><dt>Channel</dt><dd>{{ v.a.channel|channel_label }}{% if v.a.format %} · {{ v.a.format }}{% endif %}</dd></div>{% endif %}
+      {% if v.a.cta %}<div><dt>Call to action</dt><dd class="wrap">{{ v.a.cta }}</dd></div>{% endif %}
+      {% if v.a.effort_minutes %}<div><dt>Effort</dt><dd>{{ v.a.effort_minutes }} minutes</dd></div>{% endif %}
+    </dl>
+    {% if v.a.purpose %}<p class="wrap">{{ v.a.purpose|linebreaksbr }}</p>{% endif %}
+    {% if v.a.brief %}<details class="brief"><summary>Brief</summary><div class="wrap">{{ v.a.brief|linebreaks }}</div></details>{% endif %}
+    {% if v.a.checklist %}<ul class="checklist">{% for item in v.a.checklist %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+  </section>
+
+  <section class="group">
+    <h3 class="group-title">Reasoning</h3>
+    <p class="meta">{% if v.a.origin == "manual" %}You added this activity.{% else %}Operational task from your campaign dates{% if v.a.origin_detail.edited_by_owner %}, edited by you{% endif %}.{% endif %}
+      Basis: {{ v.a.origin_detail.basis|default:"Your schedule" }}. <a href="/ui/activity/{{ v.a.pk }}/why" data-dialog-push>Why?</a></p>
+    {% if outcomes %}<p class="meta">Serves {% for ov in outcomes %}<a href="/ui/outcome/{{ ov.pk }}" data-dialog-push>{{ ov.metric.label }}</a>{% if not forloop.last %}, {% endif %}{% endfor %}. Completing it does not change outcome progress.</p>{% endif %}
+  </section>
+
+  <section class="group">
+    <h3 class="group-title">Execution</h3>
+    {% if v.a.status == "planned" %}
+      {% if v.a.campaign.status == "draft" %}
+        <p class="meta">This campaign is a draft. Activate it to record execution.</p>
+      {% elif v.a.campaign.status == "active" or v.a.campaign.status == "paused" %}
+      <form id="complete-form" data-api="/api/activities/{{ v.a.pk }}/execute" data-after="reload" class="stack">
+        <input type="hidden" name="revision" value="{{ v.a.revision }}">
+        <input type="hidden" name="action" value="complete">
+        <label>When was it done? <input type="datetime-local" name="actual_at" value="{{ default_actual|local_input }}" max="{{ default_actual|local_input }}"></label>
+        <label>Link to the published post <input type="url" name="url" placeholder="https://…" maxlength="500"></label>
+        <label>Notes <textarea name="notes" rows="2" maxlength="2000"></textarea></label>
+        <p class="form-error" role="alert"></p>
+      </form>
+      <details>
+        <summary>Skip or cancel</summary>
+        <form data-api="/api/activities/{{ v.a.pk }}/execute" data-after="reload" class="stack">
+          <input type="hidden" name="revision" value="{{ v.a.revision }}">
+          <label>Reason <textarea name="reason" rows="2" required maxlength="2000"></textarea></label>
+          <div class="actions">
+            <button class="button" type="submit" name="action" value="skip">Skip</button>
+            <button class="button" type="submit" name="action" value="cancel">Cancel activity</button>
+          </div>
+          <p class="form-error" role="alert"></p>
+        </form>
+      </details>
+      {% else %}<p class="meta">This campaign is {{ v.a.campaign.status }}.</p>{% endif %}
+    {% else %}
+      <dl class="facts compact">
+        {% if v.actual %}<div><dt>Done</dt><dd>{{ v.actual|local }}</dd></div>{% endif %}
+        {% if v.a.actual_url %}<div><dt>Link</dt><dd class="wrap"><a href="{{ v.a.actual_url }}" rel="noopener noreferrer" target="_blank">{{ v.a.actual_url }}</a></dd></div>{% endif %}
+        {% if v.a.execution_notes %}<div><dt>Notes</dt><dd class="wrap">{{ v.a.execution_notes }}</dd></div>{% endif %}
+      </dl>
+      {% if v.a.campaign.status == "active" or v.a.campaign.status == "paused" %}
+      <details>
+        <summary>Reopen</summary>
+        <form data-api="/api/activities/{{ v.a.pk }}/execute" data-after="reload" class="stack">
+          <input type="hidden" name="revision" value="{{ v.a.revision }}">
+          <input type="hidden" name="action" value="reopen">
+          <label>Reason <textarea name="reason" rows="2" maxlength="2000"></textarea></label>
+          <div class="actions"><button class="button" type="submit">Reopen activity</button></div>
+          <p class="form-error" role="alert"></p>
+        </form>
+      </details>
+      {% endif %}
+    {% endif %}
+    {% if events %}
+    <details><summary>History</summary>
+      <ol class="history">{% for e in events %}<li>{{ e.recorded_at|local }}: {{ e.prior_state }} to {{ e.new_state }}{% if e.reason %}. {{ e.reason }}{% endif %}</li>{% endfor %}</ol>
+    </details>
+    {% endif %}
+  </section>
+</div>
+<footer class="modal-foot">
+  {% if v.a.campaign.status != "completed" and v.a.campaign.status != "cancelled" %}<a class="button subtle" href="/ui/activity/{{ v.a.pk }}/edit" data-dialog-push>Edit</a>{% endif %}
+  {% if v.a.status == "planned" and v.a.campaign.status != "draft" and v.a.campaign.status != "completed" and v.a.campaign.status != "cancelled" %}
+  <button class="button primary" type="submit" form="complete-form">Mark complete</button>
+  {% endif %}
+</footer>
+</div>
