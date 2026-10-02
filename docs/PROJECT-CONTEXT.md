@@ -1,4 +1,4 @@
-# Band Evidence: project context
+# Socials Manager: project context
 
 Orientation for anyone working in this repository. It summarises; it does not replace the specification. When this file and `docs/handoff/` disagree, `docs/handoff/` wins, and within it `spec/DECISIONS.md` resolves conflicts.
 
@@ -44,8 +44,9 @@ An **Artist** (own, or reviewed peer) has **Promoted objects** (recording, relea
 
 | Gate | Current state | Blocks |
 | --- | --- | --- |
-| Better Man canonical identity/date | Provisional `provisional:better-man:01`; artist ID `3kL0Ts1i5vPiod2G2DxAu6` from owner URL | Durable external matching and release-relative analysis |
-| Spotify numerical/LLM processing rights | Unresolved | Fitting, backtesting, inference and LLM use of Spotify-derived data |
+| Better Man canonical identity/date | Track `7n6t9MVmHySFjov060YHcf` and release 2026-09-25 owner-supplied; identity **pending** until confirmed in Settings (not inferred from CSV filenames) | Confirmed identity and release-relative analysis |
+| Spotify numerical/LLM processing rights | **Denied** in policy until source-use permission is established | Fitting, backtesting, inference and LLM use of Spotify-derived data |
+| Instagram @opalseason_ | Live probe **Blocked**; Meta app access unsure | Automatic Instagram metrics and timing |
 | Forecast history | Five non-zero streaming days | Any validated forecast claim |
 | Meta capabilities | Not probed | Automatic Instagram metrics and timing (Stage 2) |
 | Pre-save/ticket provider | None selected | Automatic retrieval; manual/reviewed reports still work |
@@ -58,12 +59,12 @@ An **Artist** (own, or reviewed peer) has **Promoted objects** (recording, relea
 | `docs/handoff/` | Byte-identical normative copy | Yes |
 | `docs/PROJECT-CONTEXT.md`, `docs/adr/`, `docs/reports/` | Context, decisions, stage and verification reports | Yes |
 | `execution/AGENT-STATE.json` | Resumable checkpoint | Yes |
-| `bandevidence/`, `core/`, `catalogue/`, `sources/`, `campaigns/`, `evaluation/`, `web/` | Django project and apps | Yes |
-| `bin/band-evidence`, `tests/` | Launcher; unit, process and browser tests | Yes |
+| `socials_manager/`, `core/`, `catalogue/`, `sources/`, `campaigns/`, `evaluation/`, `findings/`, `context/`, `web/` | Django project and apps | Yes |
+| `bin/socials-manager`, `tests/` | Launcher; unit, process and browser tests | Yes |
 | `~/Downloads/band-evidence-development-handoff/` | Private full handoff, read-only | No, outside repo |
-| Owner data root | `app.sqlite3`, `instance.json`, `secret_key`, `imports/`, `backups/`, `run/`. Set by `BAND_EVIDENCE_DATA_ROOT`; default `~/Library/Application Support/BandEvidence/`; refused inside the repo | No, outside repo |
+| Owner data root | `app.sqlite3`, `instance.json`, `secret_key`, `imports/`, `backups/`, `run/`. Set by `SOCIALS_MANAGER_DATA_ROOT` (legacy `BAND_EVIDENCE_DATA_ROOT` still read); default `~/Library/Application Support/SocialsManager/`; migrate from BandEvidence via `bin/socials-manager migrate-data` | No, outside repo |
 | Test/synthetic roots | Temporary directories per run, marked synthetic | No |
-| Real CSV regression fixtures | Read in place from the handoff's `data/real-inputs/` via `BAND_EVIDENCE_REAL_FIXTURES`; never copied into the repo or seeded. Unset means those tests report Not run | No |
+| Real CSV regression fixtures | Read in place via `SOCIALS_MANAGER_REAL_FIXTURES` (legacy `BAND_EVIDENCE_REAL_FIXTURES`); never copied into the repo | No |
 
 ## Environment (recorded 2 Oct 2026)
 

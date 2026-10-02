@@ -7,7 +7,7 @@ from pathlib import Path
 
 from django.conf import settings
 
-import bandevidence
+import socials_manager
 
 from . import clock
 from .paths import data_root, safe_path
@@ -72,10 +72,10 @@ def create_backup(reason="manual", root: Path | None = None):
         files.append({"path": relative, "sha256": sha})
     shutil.copy2(root / "instance.json", dest / "instance.json")
     manifest = {
-        "format": "band-evidence-backup-1",
+        "format": "socials-manager-backup-1",
         "created_at": clock.now().isoformat(),
         "reason": reason,
-        "app_version": bandevidence.APP_VERSION,
+        "app_version": socials_manager.APP_VERSION,
         "sqlite_runtime": sqlite3.sqlite_version,
         "database_sha256": _sha(dest / "app.sqlite3"),
         "instance_sha256": _sha(dest / "instance.json"),
@@ -115,7 +115,7 @@ def restore_to(backup_dir: Path, target_root: Path):
     if target_root.exists() and any(target_root.iterdir()):
         raise RuntimeError("Restore target must be a new, empty folder.")
     manifest = json.loads((backup_dir / "manifest.json").read_text())
-    if manifest.get("format") != "band-evidence-backup-1":
+    if manifest.get("format") not in ("socials-manager-backup-1", "band-evidence-backup-1"):
         raise RuntimeError("Unknown backup format.")
     if _sha(backup_dir / "app.sqlite3") != manifest["database_sha256"]:
         raise RuntimeError("Backup database hash mismatch.")

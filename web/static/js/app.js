@@ -1,4 +1,4 @@
-// Band Evidence client. The server is the only source of truth: every view is re-fetched after a mutation.
+// Socials Manager client. The server is the only source of truth: every view is re-fetched after a mutation.
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
@@ -739,4 +739,4 @@ dialog.init();
 enhance(document.body);
 rememberEvidenceTab();
 scheduleMinuteRefresh();
-window.bandEvidence = { dialog, refreshPage };
+window.socialsManager = { dialog, refreshPage };

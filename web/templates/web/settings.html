@@ -36,7 +36,7 @@
   <div class="section-head"><h2 class="h3">Backups</h2>
     <form data-api="/api/backups" data-after="reload"><button class="button" type="submit">Back up now</button><p class="form-error" role="alert"></p></form>
   </div>
-  <p class="meta">A backup runs daily while the app is open. Each one is checked and includes every original import file. Restoring needs the app stopped: <code>bin/band-evidence restore &lt;backup folder&gt;</code>.</p>
+  <p class="meta">A backup runs daily while the app is open. Each one is checked and includes every original import file. Restoring needs the app stopped: <code>bin/socials-manager restore &lt;backup folder&gt;</code>.</p>
   <ul class="plain">{% for b in backups %}<li>{{ b.created_at|slice:":16"|cut:"T"|default:b.created_at }} · {{ b.reason }} · {{ b.counts.sources_observation|num }} observations</li>{% empty %}<li class="empty-line">No backups yet.</li>{% endfor %}</ul>
 </section>
 

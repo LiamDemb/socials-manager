@@ -10,7 +10,7 @@ from . import backup, clock, instance
 from .models import BackupRecord, OutboxEvent, WorkerHeartbeat
 from .services import audit, claim_next_job, enqueue, finish_job
 
-log = logging.getLogger("band_evidence.worker")
+log = logging.getLogger("socials_manager.worker")
 
 
 def run_backup_job(job):
@@ -28,16 +28,24 @@ def run_cleanup_job(job):
         audit("operations", "imports", "orphan_cleanup", {"removed": removed}, actor="system")
 
 
-HANDLERS = {"backup.daily": run_backup_job, "cleanup.orphans": run_cleanup_job}
+def run_collect_job(job):
+    from sources.collector import run_collect
+
+    run_collect(job)
+
+
+HANDLERS = {"backup.daily": run_backup_job, "cleanup.orphans": run_cleanup_job, "collect.source": run_collect_job}
 
 
 def handle_outbox(limit=50):
-    """Stage 1 has no findings or proposals yet; invalidations are recorded so later stages can recompute."""
+    from findings.services import invalidate_for_event
+
     handled = 0
     for event in OutboxEvent.objects.filter(handled_at__isnull=True).order_by("created_at")[:limit]:
         with transaction.atomic():
             if OutboxEvent.objects.filter(pk=event.pk, handled_at__isnull=True).update(handled_at=clock.now()) == 1:
-                audit("outbox", event.pk, f"handled.{event.kind}", {"invalidated": [], "note": "No derived findings yet"}, actor="system")
+                invalidated = invalidate_for_event(event.kind, event.payload)
+                audit("outbox", event.pk, f"handled.{event.kind}", {"invalidated": invalidated}, actor="system")
                 handled += 1
     return handled
 
@@ -47,6 +55,7 @@ def schedule_due_jobs():
     local_day = clock.now().astimezone(__import__("zoneinfo").ZoneInfo(tz_name)).date().isoformat()
     enqueue("backup.daily", "instance", local_day)
     enqueue("cleanup.orphans", "imports", local_day)
+    enqueue("collect.source", "instagram:graph_api", local_day)
 
 
 def tick(worker_id):

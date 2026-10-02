@@ -68,8 +68,8 @@ class Browser(SimpleTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.tmp = Path(tempfile.mkdtemp(prefix="be-browser-"))
-        cls.env = {k: v for k, v in os.environ.items() if not k.startswith("BAND_EVIDENCE_") and k != "DJANGO_SETTINGS_MODULE"}
-        cls.env.update(BAND_EVIDENCE_DATA_ROOT=str(cls.tmp / "data"), DJANGO_SETTINGS_MODULE="bandevidence.settings")
+        cls.env = {k: v for k, v in os.environ.items() if not k.startswith(("SOCIALS_MANAGER_", "BAND_EVIDENCE_")) and k != "DJANGO_SETTINGS_MODULE"}
+        cls.env.update(SOCIALS_MANAGER_DATA_ROOT=str(cls.tmp / "data"), DJANGO_SETTINGS_MODULE="socials_manager.settings")
         cls.manage("init_instance", "--artist", "Fixture Band", "--timezone", "Australia/Perth", "--synthetic")
         script = f"TITLE = {LONG_TITLE!r}\nBRIEF = {LONG_BRIEF!r}\n" + SEED
         cls.ids = json.loads(cls.manage("shell", "-c", script).stdout.strip().splitlines()[-1])

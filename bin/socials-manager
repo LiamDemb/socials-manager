@@ -1,28 +1,41 @@
 #!/usr/bin/env bash
-# Band Evidence launcher. Local loopback app; data lives outside this folder.
+# Socials Manager launcher. Local loopback app; data lives outside this folder.
 set -euo pipefail
 
 APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENV="$APP_DIR/.venv"
 PY="$VENV/bin/python"
-DATA_ROOT="${BAND_EVIDENCE_DATA_ROOT:-$HOME/Library/Application Support/BandEvidence}"
-export BAND_EVIDENCE_DATA_ROOT="$DATA_ROOT"
+NEW_ROOT="$HOME/Library/Application Support/SocialsManager"
+LEGACY_ROOT="$HOME/Library/Application Support/BandEvidence"
+if [[ -n "${SOCIALS_MANAGER_DATA_ROOT:-}" ]]; then
+  DATA_ROOT="$SOCIALS_MANAGER_DATA_ROOT"
+elif [[ -n "${BAND_EVIDENCE_DATA_ROOT:-}" ]]; then
+  DATA_ROOT="$BAND_EVIDENCE_DATA_ROOT"
+elif [[ -d "$NEW_ROOT" ]]; then
+  DATA_ROOT="$NEW_ROOT"
+elif [[ -d "$LEGACY_ROOT" ]]; then
+  DATA_ROOT="$LEGACY_ROOT"
+else
+  DATA_ROOT="$NEW_ROOT"
+fi
+export SOCIALS_MANAGER_DATA_ROOT="$DATA_ROOT"
 cd "$APP_DIR"
 
 need_venv() {
   if [[ ! -x "$PY" ]]; then
-    echo "Not set up yet. Run: bin/band-evidence setup" >&2
+    echo "Not set up yet. Run: bin/socials-manager setup" >&2
     exit 1
   fi
 }
 
 usage() {
   cat <<EOF
-Usage: bin/band-evidence <command>
+Usage: bin/socials-manager <command>
 
   setup [--test]          Create .venv and install hash-pinned dependencies (--test adds browser-test tools)
   init --artist NAME [--timezone Australia/Perth]
-                          Create a new installation in the data folder
+                          Create a new installation in the data folder (never overwrites existing data)
+  migrate-data            Copy a legacy BandEvidence data folder into SocialsManager with verification
   start [--port 8765]     Apply upgrades (with a backup first), start the worker and open the app on 127.0.0.1
   backup [--list]         Make a verified backup now, or list backups
   restore BACKUP_DIR [--promote]
@@ -55,6 +68,10 @@ case "$cmd" in
     need_venv
     "$PY" manage.py init_instance "$@"
     ;;
+  migrate-data)
+    need_venv
+    "$PY" manage.py migrate_data_root "$@"
+    ;;
   start)
     need_venv
     "$PY" manage.py upgrade
@@ -64,13 +81,12 @@ case "$cmd" in
     echo "$WORKER_PID" >"$DATA_ROOT/run/worker.pid"
     "$PY" manage.py serve "$@" &
     SERVER_PID=$!
-    # Background children ignore SIGINT in a non-interactive shell, so stop them with SIGTERM.
     cleanup() {
       trap - EXIT INT TERM
       kill -TERM "$SERVER_PID" "$WORKER_PID" 2>/dev/null || true
       wait "$SERVER_PID" "$WORKER_PID" 2>/dev/null || true
       rm -f "$DATA_ROOT/run/worker.pid"
-      echo "Band Evidence stopped."
+      echo "Socials Manager stopped."
     }
     trap cleanup EXIT INT TERM
     wait "$SERVER_PID" || true

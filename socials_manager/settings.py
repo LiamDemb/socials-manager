@@ -2,21 +2,19 @@ import os
 import secrets
 from pathlib import Path
 
+from core.env import env_first, resolve_data_root, resolve_real_fixtures_dir
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-DEFAULT_DATA_ROOT = Path.home() / "Library" / "Application Support" / "BandEvidence"
-DATA_ROOT = Path(os.environ.get("BAND_EVIDENCE_DATA_ROOT", DEFAULT_DATA_ROOT)).expanduser().resolve()
-
+DATA_ROOT = resolve_data_root()
 if DATA_ROOT == BASE_DIR or BASE_DIR in DATA_ROOT.parents:
     raise RuntimeError("DATA_ROOT must be outside the source repository.")
 
-# Private real-data regression fixtures, read in place and never copied into the repository.
-_fixtures = os.environ.get("BAND_EVIDENCE_REAL_FIXTURES")
-REAL_FIXTURES_DIR = Path(_fixtures).expanduser() if _fixtures else None
+REAL_FIXTURES_DIR = resolve_real_fixtures_dir()
 
 
 def _secret_key():
-    env = os.environ.get("BAND_EVIDENCE_SECRET_KEY")
+    env = env_first("SOCIALS_MANAGER_SECRET_KEY", "BAND_EVIDENCE_SECRET_KEY")
     if env:
         return env
     path = DATA_ROOT / "secret_key"
@@ -28,14 +26,13 @@ def _secret_key():
         with os.fdopen(fd, "w") as fh:
             fh.write(key)
         return key
-    # Not initialised yet; init_instance creates the root and key.
     return "uninitialised-" + secrets.token_urlsafe(20)
 
 
 SECRET_KEY = _secret_key()
-DEBUG = os.environ.get("BAND_EVIDENCE_DEBUG") == "1"
+DEBUG = env_first("SOCIALS_MANAGER_DEBUG", "BAND_EVIDENCE_DEBUG") == "1"
 BIND_HOST = "127.0.0.1"
-PORT = int(os.environ.get("BAND_EVIDENCE_PORT", "8765"))
+PORT = int(env_first("SOCIALS_MANAGER_PORT", "BAND_EVIDENCE_PORT", default="8765"))
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 CSRF_TRUSTED_ORIGINS = [f"http://127.0.0.1:{PORT}", f"http://localhost:{PORT}"]
 
@@ -46,6 +43,8 @@ INSTALLED_APPS = [
     "sources",
     "campaigns",
     "evaluation",
+    "findings",
+    "context",
     "web",
 ]
 
@@ -58,7 +57,7 @@ MIDDLEWARE = [
     "core.middleware.SecurityHeadersMiddleware",
 ]
 
-ROOT_URLCONF = "bandevidence.urls"
+ROOT_URLCONF = "socials_manager.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -72,7 +71,7 @@ TEMPLATES = [
         },
     }
 ]
-WSGI_APPLICATION = "bandevidence.wsgi.application"
+WSGI_APPLICATION = "socials_manager.wsgi.application"
 
 DATABASES = {
     "default": {
@@ -105,7 +104,6 @@ X_FRAME_OPTIONS = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "same-origin"
 
-# Clock override is only honoured by test/synthetic settings.
 ALLOW_CLOCK_OVERRIDE = False
 ALLOW_SYNTHETIC_SOURCES = False
 

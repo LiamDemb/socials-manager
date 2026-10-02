@@ -15,7 +15,7 @@ AUDIENCE = real_fixture("opal-season-audience.csv")
 SONG = real_fixture("better-man-streams.csv")
 
 
-@unittest.skipUnless(AUDIENCE and SONG, "Not run: set BAND_EVIDENCE_REAL_FIXTURES to the private real-inputs folder")
+@unittest.skipUnless(AUDIENCE and SONG, "Not run: set SOCIALS_MANAGER_REAL_FIXTURES to the private real-inputs folder")
 class RealSpotifyImport(TestCase):
     def setUp(self):
         self.artist = bootstrap()

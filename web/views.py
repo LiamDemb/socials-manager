@@ -92,6 +92,14 @@ def evidence(request, tab="findings"):
     if tab not in dict(EVIDENCE_TABS):
         raise Http404
     ctx = {"tab": tab, "tabs": EVIDENCE_TABS}
+    if tab == "findings":
+        from findings.models import Finding
+
+        ctx["findings"] = Finding.objects.filter(status="published").select_related("entity")[:50]
+    if tab == "review":
+        from context.models import ReviewedContextItem
+
+        ctx["review_items"] = ReviewedContextItem.objects.order_by("-reviewed_at", "source_label")[:50]
     if tab == "data":
         f = _evidence_filters(request)
         rows = p.coverage_rows()
@@ -175,7 +183,7 @@ def import_download(request, batch_id, kind):
 @require_GET
 def export_all(request):
     response = HttpResponse(sources.export_common(), content_type="text/csv")
-    response["Content-Disposition"] = 'attachment; filename="band-evidence-observations.csv"'
+    response["Content-Disposition"] = 'attachment; filename="socials-manager-observations.csv"'
     return response
 
 
@@ -199,15 +207,20 @@ def settings_page(request):
 
 @require_GET
 def placeholder(request, section):
-    copy = {
-        "peers": ("Peers", "No peers yet.", "Peers are a small cohort of comparable artists whose identity you verify before anything they post can inform a plan. Adding peers needs a public-data source that is not set up in this version."),
-        "inspiration": ("Inspiration", "No references yet.", "Inspiration holds creative references you browse and attach to activities. A reference is a creative idea, not proof that a tactic works. Saving references is not available in this version."),
-        "ask": ("Ask", "Ask is unavailable.", "Ask needs an approved model provider and permitted evidence, and neither is configured. Everything else in the app works without it."),
-    }
-    if section not in copy:
-        raise Http404
-    title, heading, body = copy[section]
-    return page(request, "web/placeholder.html", section, title, heading=heading, body=body)
+    if section == "peers":
+        from context.models import PeerProfile
+
+        peers = PeerProfile.objects.order_by("label")
+        return page(request, "web/peers.html", "peers", "Peers", peers=peers)
+    if section == "inspiration":
+        from context.models import InspirationReference
+
+        refs = InspirationReference.objects.order_by("-retrieved_at")[:50]
+        return page(request, "web/inspiration.html", "inspiration", "Inspiration", refs=refs)
+    if section == "ask":
+        return page(request, "web/placeholder.html", "ask", "Ask", heading="Ask is unavailable.",
+                    body="Ask needs an approved model provider and permitted evidence, and neither is configured. Everything else in the app works without it.")
+    raise Http404
 
 
 # Dialog fragments

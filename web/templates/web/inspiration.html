@@ -1,0 +1,13 @@
+{% extends "web/base.html" %}{% load be %}
+{% block content %}
+<section class="section">
+  <h2 class="h3">References</h2>
+  <p class="meta">Creative references are ideas, not evidence that a tactic works.</p>
+  {% if refs %}
+  <ul class="plain">{% for r in refs %}<li class="card"><strong>{{ r.title }}</strong>{% if r.url %} · <a href="{{ r.url }}" rel="noopener noreferrer" target="_blank">Source</a>{% endif %}
+    <p class="meta">{{ r.scope }} · retrieved {{ r.retrieved_at|local }}</p>{% if r.excerpt %}<p class="wrap">{{ r.excerpt }}</p>{% endif %}</li>{% endfor %}</ul>
+  {% else %}
+  <div class="empty"><h3>No references yet</h3><p>Attach references from campaigns or import reviewed context when available.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

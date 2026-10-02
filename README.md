@@ -1,6 +1,6 @@
-# Band Evidence
+# Socials Manager
 
-Internal, single-artist tool for planning campaigns and measuring them against imported Spotify for Artists data. It runs on this Mac only (127.0.0.1) and keeps its data outside this folder.
+Internal, single-artist tool for planning campaigns and measuring them against imported Spotify for Artists data (and, when authorised, other sources). It runs on this Mac only (127.0.0.1) and keeps its data outside this folder.
 
 ## Requirements
 
@@ -10,48 +10,69 @@ Internal, single-artist tool for planning campaigns and measuring them against i
 ## First run
 
 ```sh
-bin/band-evidence setup
-bin/band-evidence init --artist "Opal Season" --timezone Australia/Perth
-bin/band-evidence start
+bin/socials-manager setup
+bin/socials-manager init --artist "Opal Season" --timezone Australia/Perth
+bin/socials-manager start
 ```
 
-Open <http://127.0.0.1:8765>. Stop with Ctrl+C, which stops the server and the background worker.
+Open <http://127.0.0.1:8765>. Ctrl+C stops the server and the background worker.
 
-Data lives in `~/Library/Application Support/BandEvidence/`. To use another folder (for a trial run, say), set it for every command:
+Data lives in `~/Library/Application Support/SocialsManager/`. To use another folder:
 
 ```sh
-export BAND_EVIDENCE_DATA_ROOT="$HOME/BandEvidence-trial"
+export SOCIALS_MANAGER_DATA_ROOT="$HOME/SocialsManager-trial"
 ```
 
-The folder must be outside this repository. `init` never overwrites an existing installation. Use `start --port 8770` for a different port.
+The folder must be outside this repository. `init` never overwrites an existing installation.
 
-## Getting Spotify data in
+### Migrating from Band Evidence
 
-Spotify for Artists has no analytics API, so data comes in by CSV. In Spotify for Artists, export the audience timeline (whole artist) and any song's streams timeline. In the app, go to **Sources** and choose **Import CSV**. You see a preview first. Nothing is stored as data until you commit, the original file is kept unchanged, and any import can be undone.
+If you already have data under `~/Library/Application Support/BandEvidence/`:
+
+```sh
+bin/socials-manager migrate-data
+export SOCIALS_MANAGER_DATA_ROOT="$HOME/Library/Application Support/SocialsManager"
+```
+
+This takes a verified backup of the legacy folder first and refuses to copy over an existing SocialsManager database.
+
+### Owner catalogue facts
+
+After Better Man exists in the catalogue (import or create):
+
+```sh
+python manage.py sync_owner_catalogue
+```
+
+This stores the owner-supplied Spotify track URL and release date without confirming identity (still pending until you confirm in Settings).
+
+## Spotify data
+
+Export Audience and song CSVs from Spotify for Artists, then **Sources → Import CSV**. Reviewed import only; there is no analytics API.
+
+## Instagram / Meta
+
+Live integration is **Blocked** until you complete [docs/META-SETUP.md](docs/META-SETUP.md). Run `python manage.py probe_instagram` after storing a token locally (never in the repo).
 
 ## Backups
 
-- `start` makes a verified backup before applying any upgrade, and the worker makes one daily.
-- `bin/band-evidence backup` makes one now; `backup --list` shows them.
-- `bin/band-evidence restore <backup folder>` restores into a new folder beside the data folder and verifies it. Add `--promote` (with the app stopped) to switch to it.
+- `start` backs up before upgrades; the worker backs up daily.
+- `bin/socials-manager backup` / `backup --list`
+- `bin/socials-manager restore <folder>` then `--promote` with the app stopped.
 
 ## Tests
 
 ```sh
-bin/band-evidence setup --test     # adds Playwright for browser checks; uses installed Chrome
-bin/band-evidence test
+bin/socials-manager setup --test
+bin/socials-manager test
+export SOCIALS_MANAGER_REAL_FIXTURES="$HOME/Downloads/band-evidence-development-handoff/data/real-inputs"
 ```
 
-The real-CSV regression tests read the original fixtures in place and report Not run unless you point at them:
-
-```sh
-export BAND_EVIDENCE_REAL_FIXTURES="$HOME/Downloads/band-evidence-development-handoff/data/real-inputs"
-```
+Legacy env names (`BAND_EVIDENCE_DATA_ROOT`, etc.) still work but are deprecated.
 
 ## Documentation
 
-- `docs/PROJECT-CONTEXT.md`: orientation and open gates
-- `docs/handoff/`: the specification (authoritative)
-- `docs/adr/`: engineering decisions
-- `docs/reports/`: stage and verification reports
-- `execution/AGENT-STATE.json`: development checkpoint
+- [docs/PROJECT-CONTEXT.md](docs/PROJECT-CONTEXT.md)
+- [docs/handoff/](docs/handoff/) (authoritative spec; historical product name)
+- [docs/adr/](docs/adr/)
+- [execution/AGENT-STATE.json](execution/AGENT-STATE.json)

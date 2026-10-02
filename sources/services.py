@@ -39,14 +39,14 @@ SPOTIFY_POLICY_V1 = {
         "display": "allowed",
         "descriptive_derive": "allowed",
         "export": "allowed",
-        "statistical_fit": "unresolved",
-        "model_infer": "unresolved",
-        "llm_ingest": "unresolved",
+        "statistical_fit": "denied",
+        "model_infer": "denied",
+        "llm_ingest": "denied",
     },
     "assessment_ref": (
         "Owner-directed import of the band's own Spotify for Artists CSV exports for internal display and descriptive "
         "aggregation (handoff D07, D08; spec/INTEGRATIONS.md). Numerical fitting, model inference and LLM ingestion are "
-        "unresolved pending an applicable assessment (spec/DECISIONS.md gate); unknown denies."
+        "denied until an applicable source-use permission is established (spec/DECISIONS.md); not owner feature approval alone."
     ),
     "conditions": "Private loopback installation. No public distribution, sale, audio ingestion or fan-level profiles.",
     "retention": {"raw_files": "retain until owner deletes the source", "derived": "inherits raw-file restrictions"},

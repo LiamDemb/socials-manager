@@ -1,4 +1,4 @@
-/* Band Evidence. Monochrome foundation from the reference prototype; colour only for meaningful state, always with text. */
+/* Socials Manager. Monochrome foundation from the reference prototype; colour only for meaningful state, always with text. */
 :root {
   --ink: #202020; --muted: #676767; --line: #e6e6e6; --soft: #f7f7f7; --chrome: #fafafa; --radius: 8px;
   --positive: #236a42; --negative: #a5362c; --warning: #865d18; --active: #34596e;

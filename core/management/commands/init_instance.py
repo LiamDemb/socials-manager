@@ -30,4 +30,8 @@ class Command(BaseCommand):
         own = create_own_artist(artist)
         instance.create(own.pk, artist, timezone, fixture_class="synthetic" if synthetic else "owner")
         ensure_spotify_source()
+        from sources import instagram
+        from sources.models import Source, SourcePolicyVersion
+
+        instagram.ensure_instagram_source(Source, SourcePolicyVersion)
         self.stdout.write(self.style.SUCCESS(f"Initialised {root} for {artist} ({timezone})."))

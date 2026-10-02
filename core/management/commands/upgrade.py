@@ -12,7 +12,7 @@ class Command(BaseCommand):
 
     def handle(self, **opts):
         if not instance.is_initialised():
-            raise CommandError(f"No installation at {data_root()}. Run: bin/band-evidence init --artist \"Band name\"")
+            raise CommandError(f"No installation at {data_root()}. Run: bin/socials-manager init --artist \"Band name\"")
         executor = MigrationExecutor(connection)
         plan = executor.migration_plan(executor.loader.graph.leaf_nodes())
         if not plan:

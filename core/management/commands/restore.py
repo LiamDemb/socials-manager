@@ -31,7 +31,7 @@ class Command(BaseCommand):
         self.stdout.write(json.dumps(report, indent=2))
         if not report["ok"]:
             raise CommandError("Restore verification failed; the active data root was not changed.")
-        env = {**os.environ, "BAND_EVIDENCE_DATA_ROOT": str(Path(to).resolve())}
+        env = {**os.environ, "SOCIALS_MANAGER_DATA_ROOT": str(Path(to).resolve())}
         smoke = subprocess.run([sys.executable, "manage.py", "smoke_check"], env=env, capture_output=True, text=True,
                                cwd=Path(__file__).resolve().parents[3])
         self.stdout.write(smoke.stdout)

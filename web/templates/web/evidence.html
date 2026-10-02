@@ -3,10 +3,22 @@
 {% include "web/_evidence_tabs.html" %}
 <section role="tabpanel" aria-labelledby="tab-{{ tab }}" data-tabpanel="{{ tab }}">
 {% if tab == "findings" %}
+  {% if findings %}
+  <ul class="plain findings-list">
+    {% for f in findings %}
+    <li class="card">
+      <h3 class="h4">{{ f.title }}</h3>
+      <p class="meta">{{ f.method_version }} · {{ f.computed_at|local }}{% if f.entity %} · {{ f.entity.label }}{% endif %}</p>
+      <p>{{ f.summary }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
   <div class="empty">
     <h3>No findings yet</h3>
     <p>A finding needs enough compatible history and a reviewed method. None meet that bar yet, so nothing is claimed. Your imported numbers are in <a href="/evidence/data">Observed data</a>.</p>
   </div>
+  {% endif %}
 {% elif tab == "data" %}
   <form class="filters" method="get" action="/evidence/data" data-filter-form>
     <label>Item
@@ -36,10 +48,15 @@
   <div class="empty"><h3>No observed data{% if filters.entity or filters.metric %} for this filter{% endif %}</h3><p>Imported Spotify for Artists values appear here, by item and metric. <a href="/sources">Import CSVs</a></p></div>
   {% endif %}
 {% elif tab == "review" %}
+  {% if review_items %}
+  <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Source</th><th scope="col">Meaning</th><th scope="col">Excerpt</th></tr></thead>
+  <tbody>{% for r in review_items %}<tr><td>{{ r.source_label }}</td><td>{{ r.get_meaning_state_display }}</td><td class="wrap">{{ r.raw_text|truncatechars:200 }}</td></tr>{% endfor %}</tbody></table></div>
+  {% else %}
   <div class="empty">
     <h3>Nothing needs review</h3>
     <p>Review context lists imported captions or links whose meaning is uncertain, so you can confirm, correct or leave them unknown. Spotify CSVs contain no captions.</p>
   </div>
+  {% endif %}
 {% endif %}
 </section>
 {% endblock %}

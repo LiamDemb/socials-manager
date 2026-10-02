@@ -1,79 +1,42 @@
 {
   "schema_version": 1,
-  "stage": 1,
+  "stage": 2,
   "current_task": null,
-  "current_task_state": "stage1_complete_awaiting_owner_review",
-  "completed_tasks": ["S1-01", "S1-02", "S1-03", "S1-04", "S1-05", "S1-06"],
+  "current_task_state": "stage2_complete_awaiting_owner_review",
+  "completed_tasks": ["S1-01", "S1-02", "S1-03", "S1-04", "S1-05", "S1-06", "S2-01", "S2-02", "S2-03", "S2-04", "S2-05", "S2-06"],
   "blocked_tasks": [],
   "blocked_capabilities": [
-    {"capability": "spotify_automatic_retrieval", "state": "Blocked", "reason": "No Spotify for Artists analytics API; reviewed CSV upload is the supported path"},
-    {"capability": "spotify_fit_infer_llm", "state": "Blocked", "reason": "Spotify data-use purposes unresolved; enforced in evaluation.services before any query"},
-    {"capability": "validated_forecasts", "state": "Insufficient data", "reason": "5 active streaming days of 1,002 in the real song export"}
+    {"capability": "spotify_automatic_retrieval", "state": "Blocked", "reason": "No Spotify for Artists analytics API"},
+    {"capability": "spotify_fit_infer_llm", "state": "Blocked", "reason": "Denied in source policy until source-use permission is established"},
+    {"capability": "instagram_live_probe_and_collect", "state": "Blocked", "reason": "No Meta token or app authorisation; see docs/META-SETUP.md"},
+    {"capability": "validated_forecasts", "state": "Insufficient data", "reason": "Five active streaming days in real export"}
   ],
-  "last_commit": "see git log (Stage 1 web layer, browser tests and docs)",
+  "last_commit": "pending commit after rename and Stage 2",
   "test_reports": [
-    {
-      "id": "onboarding-2026-10-02",
-      "path": "docs/reports/2026-10-02-onboarding-verification.md",
-      "scope": "handoff package and reference material only"
-    },
-    {
-      "id": "stage1-boundary-2026-10-02",
-      "path": "docs/reports/2026-10-02-stage1-boundary.md",
-      "scope": "S1-01 to S1-06",
-      "results": {
-        "suite": "Passed (85 tests, 0 skipped, real fixtures enabled)",
-        "AC01-AC13": "Passed",
-        "AC30": "Passed",
-        "AC35": "Passed",
-        "AC25": "Not run (manual parts); automated viewport/long-content checks Passed"
-      }
-    }
+    {"id": "stage2-boundary-2026-10-02", "path": "docs/reports/2026-10-02-stage2-boundary.md", "scope": "rename + S2-01..S2-06", "results": {"suite": "Passed (91 tests)"}}
   ],
   "source_capabilities": [
     {
       "source": "spotify_for_artists_csv",
       "state": "live_reviewed_upload",
-      "identity": {
-        "artist_id": "3kL0Ts1i5vPiod2G2DxAu6",
-        "recording": "Better Man: identity pending (canonical track URL/ISRC and release date)"
-      },
-      "purposes": {
-        "collect_store_display_descriptive": "allowed (assumption recorded in ADR 0001, owner to confirm)",
-        "statistical_fit_model_infer_llm_ingest": "Blocked"
-      }
+      "identity": {"artist_id": "3kL0Ts1i5vPiod2G2DxAu6", "better_man_track": "7n6t9MVmHySFjov060YHcf", "release_date": "2026-09-25", "identity_state": "pending until owner confirms"},
+      "purposes": {"collect_store_display_descriptive": "allowed per owner CSV direction", "statistical_fit_model_infer_llm_ingest": "denied"}
     },
-    {"source": "instagram_own_professional", "state": "not_probed"},
-    {"source": "presave_ticket_provider", "state": "none_selected"}
+    {
+      "source": "instagram_own_professional",
+      "state": "adapter_and_probe_blocked",
+      "handle": "opalseason_",
+      "meta_app": "UNSURE"
+    },
+    {"source": "presave_ticket_provider", "state": "manual_scoped_reports_only"}
   ],
-  "model_gates": {
-    "spotify_fitting": "Blocked (policy) and Insufficient data (history)",
-    "semantic_model": "not_selected_or_benchmarked"
-  },
   "environment": {
-    "os": "macOS 15.7.4 arm64",
+    "app": "Socials Manager",
     "python": "3.14.4",
-    "python_sqlite": "3.53.0 (WAL)",
-    "django": "5.2.17",
-    "server": "waitress 3.0.2 on 127.0.0.1",
-    "browser_tests": "Playwright 1.63.0 with installed Google Chrome",
-    "system_sqlite_cli": "3.43.2 (below WAL-reset fix; not for live DB use)"
+    "data_root_default": "~/Library/Application Support/SocialsManager/"
   },
-  "locations": {
-    "repository": "/Users/liamdemb/Projects/socials-manager",
-    "private_handoff": "~/Downloads/band-evidence-development-handoff (outside repo, read-only)",
-    "real_fixtures": "BAND_EVIDENCE_REAL_FIXTURES -> handoff data/real-inputs (read in place)",
-    "owner_data_root": "BAND_EVIDENCE_DATA_ROOT, default ~/Library/Application Support/BandEvidence/"
-  },
-  "owner_reviews": [
-    {"stage": 1, "state": "requested", "report": "docs/reports/2026-10-02-stage1-boundary.md"}
-  ],
-  "pending_owner_inputs": [
-    "Confirm Spotify CSV purposes: collect/store/display/descriptive allowed; fitting, inference and LLM use stay Blocked unless approved",
-    "Confirm the default data folder ~/Library/Application Support/BandEvidence/",
-    "Better Man track URL or ISRC and confirmed release date",
-    "For Stage 2: Instagram professional account and Meta app access for the capability probe"
-  ],
-  "next_action": "Wait for owner review of Stage 1. On approval, start S2-01 (authorised Meta capability probe).",
-  "resume_note": "Never edit docs/handoff/ or the private handoff. Record decisions as ADRs. Browser tests: bin/band-evidence setup --test, then bin/band-evidence test."
+  "owner_reviews": [{"stage": 2, "state": "requested"}],
+  "pending_owner_inputs": ["Complete Meta setup per docs/META-SETUP.md", "Confirm Better Man identity in Settings", "Select pre-save/ticket provider when ready"],
+  "next_action": "Wait for owner review before Stage 3",
+  "resume_note": "Handoff docs unchanged. Use bin/socials-manager and SOCIALS_MANAGER_* env vars."
 }

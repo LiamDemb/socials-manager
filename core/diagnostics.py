@@ -5,7 +5,7 @@ from datetime import timedelta
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 
-import bandevidence
+import socials_manager
 
 from . import backup, clock, instance
 from .models import Job, OutboxEvent, WorkerHeartbeat
@@ -23,7 +23,7 @@ def report():
     now = clock.now()
     backups = backup.list_backups()
     return {
-        "app_version": bandevidence.APP_VERSION,
+        "app_version": socials_manager.APP_VERSION,
         "python": sys.version.split()[0],
         "sqlite_runtime": sqlite3.sqlite_version,
         "wal_safe_runtime": wal_safe(),

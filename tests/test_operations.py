@@ -49,9 +49,9 @@ class Operations(SimpleTestCase):
         self.root = self.tmp / "data"
 
     def run_cmd(self, *args, root=None, check=True):
-        env = {k: v for k, v in os.environ.items() if not k.startswith("BAND_EVIDENCE_") and k != "DJANGO_SETTINGS_MODULE"}
-        env["BAND_EVIDENCE_DATA_ROOT"] = str(root or self.root)
-        env["DJANGO_SETTINGS_MODULE"] = "bandevidence.settings"
+        env = {k: v for k, v in os.environ.items() if not k.startswith(("SOCIALS_MANAGER_", "BAND_EVIDENCE_")) and k != "DJANGO_SETTINGS_MODULE"}
+        env["SOCIALS_MANAGER_DATA_ROOT"] = str(root or self.root)
+        env["DJANGO_SETTINGS_MODULE"] = "socials_manager.settings"
         proc = subprocess.run([sys.executable, str(ROOT / "manage.py"), *args], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
         if check and proc.returncode != 0:
             self.fail(f"{args} failed: {proc.stdout}\n{proc.stderr}")

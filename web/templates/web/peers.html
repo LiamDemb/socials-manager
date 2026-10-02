@@ -1,0 +1,13 @@
+{% extends "web/base.html" %}
+{% block content %}
+<section class="section">
+  <h2 class="h3">Curated peers</h2>
+  <p class="meta">Peers are owner-reviewed identities. Public collection stays blocked until a permitted route is verified.</p>
+  {% if peers %}
+  <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Name</th><th scope="col">Handle</th><th scope="col">Review</th><th scope="col">Collection</th></tr></thead>
+  <tbody>{% for p in peers %}<tr><td>{{ p.label }}</td><td>@{{ p.handle }}</td><td>{{ p.get_review_state_display }}</td><td>{{ p.capability.live_collection|default:"blocked" }}</td></tr>{% endfor %}</tbody></table></div>
+  {% else %}
+  <div class="empty"><h3>No peers yet</h3><p>Add peers after identity review. Live public-data collection is not enabled.</p></div>
+  {% endif %}
+</section>
+{% endblock %}
