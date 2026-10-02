@@ -1,0 +1,17 @@
+{
+  "catalogue_version": "tactics-v3",
+  "tactics": [
+    {
+      "id": "ig_story_teaser",
+      "roles": ["engagement", "conversion"],
+      "observable_metrics": ["instagram.account.followers.v1"],
+      "contribution": {
+        "supports_primary": true,
+        "hypothesis": "Remind existing audience; not a discovery tactic."
+      },
+      "transfer_limits": "Story views are not proof of follower gain.",
+      "effort_minutes": 25,
+      "pairs_with": ["ig_reel_teaser"]
+    }
+  ]
+}

@@ -5,20 +5,38 @@
     <h3 class="group-title">Reason</h3>
     {% if v.a.origin == "manual" %}
       <p>You added this activity. It is your schedule and does not claim evidence support.</p>
+    {% elif v.a.origin == "evidence_recommendation" %}
+      <p>{{ v.a.purpose|default:v.a.brief|truncatewords:80 }}</p>
+      {% with prov=v.a.origin_detail.provenance sf=prov.strategic_fit es=prov.evidence_support %}
+      {% if prov.role %}<p class="meta">Role: {{ prov.role|title }}{% if prov.supports_outcome_id %} · Supports outcome metric {{ prov.supports_outcome_id }}{% endif %}</p>{% endif %}
+      {% if sf.rationale %}<p class="meta">Contribution: {{ sf.rationale }}</p>{% endif %}
+      {% if prov.support_display or prov.support %}<p class="meta">Basis: {{ prov.support_display|default:prov.support }}. {{ prov.support_reason }}</p>{% endif %}
+      {% if es.proposition %}<p class="meta">Supported proposition: {{ es.proposition }}</p>{% endif %}
+      {% if es.transfer_limits or prov.transfer_limits %}<p class="meta">Transfer limits: {{ es.transfer_limits|default:prov.transfer_limits }}</p>{% endif %}
+      {% if prov.bundle_fingerprint %}<p class="meta">Evidence bundle fingerprint: {{ prov.bundle_fingerprint }}</p>{% endif %}
+      {% endwith %}
     {% else %}
-      <p>This is an operational task created from your campaign dates and choices ({{ v.a.origin_detail.template_version|default:"operational templates" }}). {{ v.a.purpose }}</p>
+      <p>Operational task from your campaign dates and choices ({{ v.a.origin_detail.template_version|default:"operational templates" }}). {{ v.a.purpose }}</p>
     {% endif %}
-    <p class="meta">Basis: {{ v.a.origin_detail.basis|default:"Your schedule" }}{% if v.a.origin_detail.previous_basis %} (originally {{ v.a.origin_detail.previous_basis }}){% endif %}.</p>
+    <p class="meta">Timing basis: {{ v.a.origin_detail.basis|default:"Your schedule" }}{% if v.a.origin_detail.previous_basis %} (originally {{ v.a.origin_detail.previous_basis }}){% endif %}.</p>
+    {% if v.a.origin_detail.stale_rationale %}<p class="warn">Underlying evidence or policy changed since approval. Review before reusing this rationale.</p>{% endif %}
   </section>
   <section class="group">
     <h3 class="group-title">Supporting finding</h3>
-    <p>None. No finding has enough compatible evidence yet, so no tactic, timing or format is recommended from data.</p>
+    {% if v.a.origin_detail.provenance.finding_refs %}
+      <ul>{% for f in v.a.origin_detail.provenance.finding_refs %}<li>{{ f.title }}</li>{% endfor %}</ul>
+    {% elif v.a.origin == "evidence_recommendation" %}
+      <p>No published finding pinned. Support may rely on observations or a planning hypothesis.</p>
+    {% else %}
+      <p>None. This activity is not evidence-backed.</p>
+    {% endif %}
   </section>
   <section class="group">
     <h3 class="group-title">Limitations</h3>
     <ul>
       <li>Completing this activity does not count toward any outcome. Progress uses imported data only.</li>
       <li>Spotify data is daily and UTC-based. It cannot show the effect of one post at a particular hour.</li>
+      {% if v.a.origin == "evidence_recommendation" %}<li>Engagement and reach are not proof of streams, saves, or ticket sales unless a finding states otherwise.</li>{% endif %}
     </ul>
   </section>
   {% if outcomes %}

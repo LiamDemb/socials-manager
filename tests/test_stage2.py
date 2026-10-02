@@ -53,10 +53,10 @@ class Stage2(TestCase):
         self.assertEqual(peer.review_state, "reviewed")
         self.assertEqual(peer.capability.get("live_collection"), "blocked")
 
-    def test_ac26_spotify_fit_denied_by_policy(self):
+    def test_ac26_spotify_policy_allows_all_purposes(self):
         policy = current_policy(ensure_spotify_source())
-        self.assertEqual(policy.purposes["statistical_fit"], "denied")
-        self.assertFalse(policy.allows("statistical_fit"))
+        self.assertEqual(policy.purposes["statistical_fit"], "allowed")
+        self.assertTrue(policy.allows("llm_ingest"))
 
     def test_instagram_probe_uses_meta_configuration(self):
         from unittest import mock

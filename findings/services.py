@@ -22,7 +22,18 @@ def invalidate_for_event(kind, payload):
     return touched
 
 
-def publish_window_comparison(entity, metric_id, title, summary, window_start, window_end, observation_refs, method_version="window-compare-v1"):
+def publish_window_comparison(
+    entity,
+    metric_id,
+    title,
+    summary,
+    window_start,
+    window_end,
+    observation_refs,
+    method_version="window-compare-v1",
+    provider="",
+    support="published",
+):
     with transaction.atomic():
         finding = Finding.objects.create(
             title=title,
@@ -32,7 +43,13 @@ def publish_window_comparison(entity, metric_id, title, summary, window_start, w
             entity=entity,
             metric_id=metric_id,
             comparison={"window_start": str(window_start), "window_end": str(window_end)},
-            lineage={"invalidates_on": "import.undone", "observation_refs": observation_refs},
+            lineage={
+                "invalidates_on": "import.undone",
+                "observation_refs": observation_refs,
+                "provider": provider,
+                "support": support,
+                "sample_units": len({r.get("observation_id") for r in observation_refs if isinstance(r, dict)}),
+            },
             computed_at=clock.now(),
         )
         EvidenceBundle.objects.create(

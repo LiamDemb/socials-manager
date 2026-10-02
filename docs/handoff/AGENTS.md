@@ -36,3 +36,7 @@ An unavailable model does not stop persistence/measurement. Insufficient evidenc
 Synthetic and real data use separate temporary roots. Do not seed fictional metrics into the owner database. Canonical identity pending is visible. No goal progress is incremented on task completion. No calendar changes are applied without review. No observed association is described as causal uplift. No model output confidence is labelled calibrated unless it has been validated.
 
 Write Australian English, concise UI labels and plain rationale summaries. No em dashes in new product copy. Expose sources, assumptions and support when helpful; do not require or store a model's private reasoning trace.
+
+## Intelligence planning (Stage 3, ADR 0004)
+
+Do not gate tactic **selection** on primary-outcome metric overlap. Use `intelligence/tactics.candidate_tactics`, `needs.py`, `assessments.py`, and `composition.py` (`compose-v1`). Keep strict `metric_id` filtering in `evidence_slices.py` and findings. LLM narrates; it does not rank or compose the activity set.

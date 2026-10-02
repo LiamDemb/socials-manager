@@ -18,8 +18,8 @@ The system learns through growing eligible history, corrected context, reviewed 
 2. Filter source-use eligibility for the intended operation, identity/review state, metric compatibility, scope, post age, coverage/freshness and cutoff. Unresolved/excluded peers are ineligible.
 3. Build a frozen evidence bundle with exact observation/interpretation/cohort/policy versions and transformations. Retrieve own history first for private outcomes. Peers contribute only comparable observable hypotheses; external context is explicitly sourced.
 4. Compute findings with a versioned method: robust summaries/sample/missingness, relevant comparison and confounders. Evidence for engagement is not automatically evidence for streams, pre-saves or ticket conversion.
-5. Select candidate tactics using an explicit catalogue mapping purpose/phase/channel/format/outcome relevance. Rank deterministically from quality/relevance/coverage and practical constraints. A tactic outside the observed outcome is a disclosed transfer hypothesis, not supported conversion.
-6. Templates or an audited local model turn the selected tactic and allowed bundle into concise reasoning and a concrete execution brief. The model cannot introduce a new effective tactic, invent a source, override scope or choose a deadline by itself.
+5. Derive campaign needs (role priorities from type/phase/context; `needs-v1`). Hard-exclude tactics only for genuine incompatibilities (channel, phase, prerequisites, policy). **Do not** require observable metrics to match the primary outcome for selection (ADR 0004). Assess **strategic fit** and **evidence support** separately. Rank and compose a small coherent set (`compose-v1`) with disclosed deferrals; the LLM does not choose the final activity set.
+6. Templates or an audited local model turn each **selected** tactic and allowed refs into concise reasoning and a concrete execution brief. Planning hypotheses without empirical support are labelled honestly; they are not `evidence_backed`.
 7. Deterministically validate schema, citation IDs/versions, target relevance, asset readiness, date/time/phase/dependencies, budget, shared capacity, duplicate intent, source policy and current revisions. Bad output is rejected/retried once or falls back; never repaired by inventing facts.
 8. Present a draft with Why?, Timing and references. User edits/accepts/rejects. Revalidate before atomic acceptance and pin the final evidence/scheduling provenance.
 
@@ -33,7 +33,7 @@ Use qualitative support assigned by code from source quality, independent units,
 
 Show the short recommendation first. On demand show reason, finding, supporting observations, assumptions/limits, source links and method. Inspiration relevance, tactic support and predictive uncertainty are different. Temporal support may be weak even when tactic support is stronger.
 
-No eligible evidence: return evidence gaps and justified operational setup, allow manual work and optional creative drafting from the user's idea. Do not fill a generic campaign and call it evidence-backed. Uncertain interpretations may remain Unknown. Unavailable inference must not disable campaign creation, execution or measurement.
+No eligible evidence for the primary outcome: return evidence gaps, justified operational setup, and contextually relevant **planning hypotheses** (e.g. supporting Stories) with disclosed limits. Do not label those evidence-backed. Uncertain interpretations may remain Unknown. Unavailable inference must not disable campaign creation, execution or measurement.
 
 ## Temporal scheduling
 

@@ -1,0 +1,3 @@
+# Optional local inference (not hash-pinned; install only after reviewing docs/adr/0003-local-llm-mlx-llama32.md).
+# .venv/bin/pip install -r requirements-llm.txt
+mlx-lm

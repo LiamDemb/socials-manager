@@ -49,7 +49,7 @@ Types: single, EP/album, live show, tour announcement, music video, merch launch
 2. **Resources:** only information that changes recommendations: existing channels/account, audience/region, assets and ready dates, total capacity, budget ceiling, availability/blackouts and constraints. Email requires an authorised opted-in list; show needs venue/date/ticket destination or source setup.
 3. **Review proposed campaign:** concise dated cards and gaps; reason/creative detail on demand, select/edit/move/remove/add, validate then approve. Approval creates only selected activities. A pending model job never traps the form.
 
-Do not promise a filled marketing campaign without eligible evidence. Generate operational setup/milestones from user dates and dependencies, distinguish them from evidence-backed tactics, allow manual activities and identify the data gap. A creative template can help the user write a manually chosen activity without claiming empirical backing.
+Do not promise a filled marketing campaign without eligible evidence for performance claims. Generate operational setup/milestones from user dates and dependencies. Tactics may be proposed for strategic fit when observable metrics differ from the primary outcome (ADR 0004); label support honestly. Allow manual activities and identify data gaps. A creative template can help the user write a manually chosen activity without claiming empirical backing.
 
 ## Activity execution content
 

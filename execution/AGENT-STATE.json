@@ -1,25 +1,29 @@
 {
   "schema_version": 1,
-  "stage": 2,
-  "current_task_state": "stage2_integrations_complete_awaiting_owner_review",
-  "completed_tasks": ["S1-01", "S1-02", "S1-03", "S1-04", "S1-05", "S1-06", "S2-01", "S2-02", "S2-03", "S2-04", "S2-05", "S2-06"],
-  "scope_overlays": ["docs/execution/SCOPE-STAGE2-INTEGRATIONS.md", "docs/execution/acceptance-cases-stage2.json"],
+  "stage": 3,
+  "current_task_state": "stage3_planning_amendment_implemented_awaiting_owner_review",
+  "completed_tasks": [
+    "S1-01", "S1-02", "S1-03", "S1-04", "S1-05", "S1-06",
+    "S2-01", "S2-02", "S2-03", "S2-04", "S2-05", "S2-06"
+  ],
+  "reopened_tasks": ["S3-01", "S3-02", "S3-03", "S3-04", "S3-05", "S3-06"],
+  "scope_overlays": [
+    "docs/execution/SCOPE-STAGE2-INTEGRATIONS.md",
+    "docs/execution/acceptance-cases-stage2.json",
+    "docs/execution/SCOPE-STAGE3-INTELLIGENCE.md",
+    "docs/execution/acceptance-cases-stage3.json",
+    "docs/execution/acceptance-cases-stage3-planning-amendment.json",
+    "docs/execution/STAGE3-REQUIREMENT-MAP.md"
+  ],
   "blocked_capabilities": [
-    {"capability": "meta_business_discovery", "state": "Blocked", "reason": "Instagram Login token only; need Facebook Page + Page access token (docs/META-SETUP.md)"},
-    {"capability": "meta_own_insights", "state": "Partial", "reason": "username/account_type via Instagram Login; follower/insight fields need Graph Page route"},
-    {"capability": "spotify_fit_infer_llm", "state": "Blocked", "reason": "Source-use permission not established"},
-    {"capability": "lastfm_sparse_seed", "state": "Insufficient data", "reason": "Opal Season returned zero similar artists; use reference seed artists"}
+    {"capability": "mlx_inference", "state": "Optional", "reason": "qualify_llm requires mlx-lm backend; install mlx-lm and re-run"},
+    {"capability": "numerical_forecast", "state": "Stage 4", "reason": "AC25/AC34 not in this repair"},
+    {"capability": "lastfm_sparse_seed", "state": "Insufficient data", "reason": "Opal Season may return zero similar artists; use reference seeds"}
   ],
   "test_reports": [
-    {"id": "stage2-integrations-2026-10-02", "path": "docs/reports/2026-10-02-stage2-integrations.md", "results": {"suite": "Passed (97 tests, 7 skipped live)"}}
+    {"id": "stage3-repair-2026-10-02", "path": "docs/reports/2026-10-02-stage3-repair-handover.md", "results": {"suite": "see handover report"}},
+    {"id": "stage3-planning-amendment-2026-10-02", "path": "docs/reports/2026-10-02-stage3-planning-amendment.md", "results": {"command": "SOCIALS_MANAGER_LLM_DISABLED=1 .venv/bin/python manage.py test tests.test_stage3_planning_amendment tests.test_stage3_repair tests.test_stage3", "passed": 34}}
   ],
-  "live_probe_summary": {
-    "musicbrainz_opal_season": "not_found",
-    "lastfm_opal_season_similar_count": 0,
-    "meta_route": "instagram_login_basic",
-    "meta_username": "opalseason_",
-    "business_discovery_supported": false
-  },
-  "next_action": "Owner review Stage 2; configure Meta Page token for peer collection; then Stage 3 gate",
-  "resume_note": "Secrets in .env only. Tests do not load .env. Use probe_meta for sanitised Meta evidence."
+  "next_action": "Owner consolidated Stage 3 review (repair + ADR 0004 amendment); then Stage 4 gate",
+  "resume_note": "Planning relevance separated from evidence: tactics-v3, needs-v1, assessments, compose-v1, synthesis-v3, Ask planning_decision facts."
 }

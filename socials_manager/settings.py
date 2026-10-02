@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "evaluation",
     "findings",
     "context",
+    "intelligence",
     "web",
 ]
 

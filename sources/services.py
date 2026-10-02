@@ -24,6 +24,7 @@ from .models import (
     Observation,
     ObservationContribution,
     ObservationVersion,
+    PURPOSES,
     RawFile,
     Source,
     SourcePolicyVersion,
@@ -32,24 +33,41 @@ from .models import (
 )
 
 SPOTIFY_ROUTE = "manual_csv"
-SPOTIFY_POLICY_V1 = {
-    "purposes": {
-        "collect": "allowed",
-        "store": "allowed",
-        "display": "allowed",
-        "descriptive_derive": "allowed",
-        "export": "allowed",
-        "statistical_fit": "denied",
-        "model_infer": "denied",
-        "llm_ingest": "denied",
-    },
+
+
+def all_allowed_purposes() -> dict:
+    return {purpose: "allowed" for purpose in PURPOSES}
+
+
+def sync_source_policy(source: Source, template: dict) -> SourcePolicyVersion:
+    """Create a new policy version when stored purposes differ from the template (e.g. after owner override)."""
+    desired = template["purposes"]
+    current = source.policies.order_by("-version").first()
+    if current and current.purposes == desired:
+        return current
+    next_version = (source.policies.aggregate(Max("version"))["version__max"] or 0) + 1
+    return SourcePolicyVersion.objects.create(
+        source=source,
+        version=next_version,
+        purposes=desired,
+        assessment_ref=template["assessment_ref"],
+        conditions=template.get("conditions", ""),
+        retention=template.get("retention", {}),
+        effective_at=clock.now(),
+    )
+
+
+SPOTIFY_POLICY = {
+    "purposes": all_allowed_purposes(),
     "assessment_ref": (
-        "Owner-directed import of the band's own Spotify for Artists CSV exports for internal display and descriptive "
-        "aggregation (handoff D07, D08; spec/INTEGRATIONS.md). Numerical fitting, model inference and LLM ingestion are "
-        "denied until an applicable source-use permission is established (spec/DECISIONS.md); not owner feature approval alone."
+        "Owner override: all purposes allowed on this private loopback instance for development "
+        "(Spotify for Artists manual CSV; handoff D07/D08; spec/INTEGRATIONS.md)."
     ),
     "conditions": "Private loopback installation. No public distribution, sale, audio ingestion or fan-level profiles.",
-    "retention": {"raw_files": "retain until owner deletes the source", "derived": "inherits raw-file restrictions"},
+    "retention": {
+        "raw_files": "retain until owner deletes the source",
+        "derived": "inherits raw-file restrictions",
+    },
 }
 SPOTIFY_CAPABILITY = {
     "route": "Manual CSV export from Spotify for Artists, reviewed import",
@@ -77,16 +95,20 @@ def ensure_spotify_source():
     source, created = Source.objects.get_or_create(
         provider=S4A,
         route=SPOTIFY_ROUTE,
-        defaults={"label": "Spotify for Artists", "capability": SPOTIFY_CAPABILITY, "state": "active"},
+        defaults={
+            "label": "Spotify for Artists",
+            "capability": SPOTIFY_CAPABILITY,
+            "state": "active",
+        },
     )
     if not source.policies.exists():
         SourcePolicyVersion.objects.create(
             source=source,
             version=1,
-            purposes=SPOTIFY_POLICY_V1["purposes"],
-            assessment_ref=SPOTIFY_POLICY_V1["assessment_ref"],
-            conditions=SPOTIFY_POLICY_V1["conditions"],
-            retention=SPOTIFY_POLICY_V1["retention"],
+            purposes=SPOTIFY_POLICY["purposes"],
+            assessment_ref=SPOTIFY_POLICY["assessment_ref"],
+            conditions=SPOTIFY_POLICY["conditions"],
+            retention=SPOTIFY_POLICY["retention"],
             effective_at=clock.now(),
         )
     return source
@@ -101,7 +123,10 @@ def current_policy(source):
 
 def require_purpose(policy, purpose):
     if not policy.allows(purpose):
-        raise PolicyDenied(purpose, f"{policy.source.label} policy v{policy.version} marks it {policy.purposes.get(purpose, 'unresolved')}.")
+        raise PolicyDenied(
+            purpose,
+            f"{policy.source.label} policy v{policy.version} marks it {policy.purposes.get(purpose, 'unresolved')}.",
+        )
 
 
 def store_raw_file(raw: bytes, original_name: str) -> RawFile:
@@ -114,14 +139,22 @@ def store_raw_file(raw: bytes, original_name: str) -> RawFile:
     if not target.exists():
         durable_write(target, raw)
     return RawFile.objects.create(
-        sha256=digest, relative_path=relative, first_name=original_name[:255], size_bytes=len(raw), received_at=clock.now()
+        sha256=digest,
+        relative_path=relative,
+        first_name=original_name[:255],
+        size_bytes=len(raw),
+        received_at=clock.now(),
     )
 
 
 def read_raw(raw_file: RawFile) -> bytes:
     data = safe_path(raw_file.relative_path).read_bytes()
     if hashlib.sha256(data).hexdigest() != raw_file.sha256:
-        raise DomainError("raw_file_changed", "The stored original file no longer matches its hash.", status=500)
+        raise DomainError(
+            "raw_file_changed",
+            "The stored original file no longer matches its hash.",
+            status=500,
+        )
     return data
 
 
@@ -137,7 +170,11 @@ def preview_upload(raw: bytes, original_name: str):
     if not raw:
         raise DomainError("empty_file", "The file is empty.", fields={"file": "Empty"})
     if len(raw) > settings.MAX_UPLOAD_BYTES:
-        raise DomainError("file_too_large", f"Files up to {settings.MAX_UPLOAD_BYTES // (1024 * 1024)} MB are supported.", fields={"file": "Too large"})
+        raise DomainError(
+            "file_too_large",
+            f"Files up to {settings.MAX_UPLOAD_BYTES // (1024 * 1024)} MB are supported.",
+            fields={"file": "Too large"},
+        )
     name = re.sub(r"[\x00-\x1f/\\]", "_", original_name or "upload.csv")[:255]
     parsed = spotify_csv.parse(raw)
     source = ensure_spotify_source()
@@ -158,11 +195,23 @@ def preview_upload(raw: bytes, original_name: str):
         )
         metrics = {m.pk: m for m in MetricDefinition.objects.filter(provider=S4A)}
         StagedObservation.objects.bulk_create(
-            [StagedObservation(batch=batch, row_number=r, metric=metrics[m], period_start=d, value=v) for r, m, d, v in parsed.values],
+            [
+                StagedObservation(
+                    batch=batch,
+                    row_number=r,
+                    metric=metrics[m],
+                    period_start=d,
+                    value=v,
+                )
+                for r, m, d, v in parsed.values
+            ],
             batch_size=2000,
         )
         StagedIssue.objects.bulk_create(
-            [StagedIssue(batch=batch, row_number=r, column=c, code=code, message=msg) for r, c, code, msg in parsed.issues[:500]]
+            [
+                StagedIssue(batch=batch, row_number=r, column=c, code=code, message=msg)
+                for r, c, code, msg in parsed.issues[:500]
+            ]
         )
         if parsed.scope == "artist" and not parsed.issues:
             artist = own_artist()
@@ -170,13 +219,28 @@ def preview_upload(raw: bytes, original_name: str):
                 _apply_mapping(batch, artist.entity)
         batch.summary = _summarise(batch, parsed.source_rows, len(parsed.issues))
         batch.save(update_fields=["summary"])
-        audit("import_batch", batch.pk, "preview", {"file": name, "sha256": raw_file.sha256, "scope": batch.scope, "state": batch.state})
+        audit(
+            "import_batch",
+            batch.pk,
+            "preview",
+            {
+                "file": name,
+                "sha256": raw_file.sha256,
+                "scope": batch.scope,
+                "state": batch.state,
+            },
+        )
     return batch
 
 
 def _existing_versions(source, entity, metric_ids, start, end):
     rows = Observation.objects.filter(
-        source=source, entity=entity, metric_id__in=metric_ids, period_start__gte=start, period_start__lte=end, dimension_key=""
+        source=source,
+        entity=entity,
+        metric_id__in=metric_ids,
+        period_start__gte=start,
+        period_start__lte=end,
+        dimension_key="",
     ).select_related("active_version")
     return {(o.metric_id, o.period_start): o for o in rows}
 
@@ -188,7 +252,9 @@ def _classify(batch):
         return 0
     start = min(s.period_start for s in staged)
     end = max(s.period_start for s in staged)
-    existing = _existing_versions(batch.source, batch.mapped_entity, {s.metric_id for s in staged}, start, end)
+    existing = _existing_versions(
+        batch.source, batch.mapped_entity, {s.metric_id for s in staged}, start, end
+    )
     changed = []
     for s in staged:
         obs = existing.get((s.metric_id, s.period_start))
@@ -199,14 +265,21 @@ def _classify(batch):
             cls, ver = "equal", active
         else:
             cls, ver = "conflict", active
-        if cls != s.classification or (ver.pk if ver else None) != s.existing_version_id:
+        if (
+            cls != s.classification
+            or (ver.pk if ver else None) != s.existing_version_id
+        ):
             s.classification = cls
             s.existing_version = ver
             if cls != "conflict":
                 s.approved = False
                 s.approval_reason = ""
             changed.append(s)
-    StagedObservation.objects.bulk_update(changed, ["classification", "existing_version", "approved", "approval_reason"], batch_size=2000)
+    StagedObservation.objects.bulk_update(
+        changed,
+        ["classification", "existing_version", "approved", "approval_reason"],
+        batch_size=2000,
+    )
     return len(changed)
 
 
@@ -227,7 +300,9 @@ def _summarise(batch, source_rows=None, issue_count=None):
             "new": counts["new"],
             "equal": counts["equal"],
             "conflict": counts["conflict"],
-            "approved_conflicts": staged.filter(classification="conflict", approved=True).count(),
+            "approved_conflicts": staged.filter(
+                classification="conflict", approved=True
+            ).count(),
             "first_date": dates["first"].isoformat() if dates["first"] else None,
             "last_date": dates["last"].isoformat() if dates["last"] else None,
             "mapped": batch.mapped_entity_id is not None,
@@ -246,11 +321,17 @@ def _apply_mapping(batch, entity):
     if batch.scope == "artist":
         artist = own_artist()
         if not artist or entity.pk != artist.pk:
-            raise DomainError("scope_mismatch", "An Audience timeline belongs to this installation's own artist.")
+            raise DomainError(
+                "scope_mismatch",
+                "An Audience timeline belongs to this installation's own artist.",
+            )
     elif batch.scope == "recording":
         obj = PromotedObject.objects.filter(pk=entity.pk, kind="recording").first()
         if obj is None:
-            raise DomainError("scope_mismatch", "A song streams timeline must map to a recording, not an artist, release or event.")
+            raise DomainError(
+                "scope_mismatch",
+                "A song streams timeline must map to a recording, not an artist, release or event.",
+            )
     else:
         raise DomainError("unmappable", "This file has no supported scope.")
     batch.mapped_entity = entity
@@ -259,46 +340,76 @@ def _apply_mapping(batch, entity):
 
 
 def batch_for_update(batch_id, expected_preview_revision):
-    batch = ImportBatch.objects.select_related("source", "mapped_entity", "raw_file", "policy_version").get(pk=batch_id)
+    batch = ImportBatch.objects.select_related(
+        "source", "mapped_entity", "raw_file", "policy_version"
+    ).get(pk=batch_id)
     if batch.state != "staged":
-        raise DomainError("batch_not_staged", f"This import is {batch.state}; start a new preview.", status=409)
+        raise DomainError(
+            "batch_not_staged",
+            f"This import is {batch.state}; start a new preview.",
+            status=409,
+        )
     if batch.preview_revision != expected_preview_revision:
-        raise DomainError("stale_preview", "The preview changed. Review the current preview before continuing.", status=409)
+        raise DomainError(
+            "stale_preview",
+            "The preview changed. Review the current preview before continuing.",
+            status=409,
+        )
     return batch
 
 
 def _bump(batch):
-    updated = ImportBatch.objects.filter(pk=batch.pk, preview_revision=batch.preview_revision, state="staged").update(
-        preview_revision=batch.preview_revision + 1
-    )
+    updated = ImportBatch.objects.filter(
+        pk=batch.pk, preview_revision=batch.preview_revision, state="staged"
+    ).update(preview_revision=batch.preview_revision + 1)
     if updated != 1:
-        raise DomainError("stale_preview", "The preview changed. Review the current preview before continuing.", status=409)
+        raise DomainError(
+            "stale_preview",
+            "The preview changed. Review the current preview before continuing.",
+            status=409,
+        )
     batch.preview_revision += 1
 
 
 @transaction.atomic
-def set_mapping(batch_id, expected_preview_revision, entity_id=None, new_recording_label=None):
+def set_mapping(
+    batch_id, expected_preview_revision, entity_id=None, new_recording_label=None
+):
     batch = batch_for_update(batch_id, expected_preview_revision)
     if new_recording_label:
         if batch.scope != "recording":
-            raise DomainError("scope_mismatch", "Only a song streams timeline creates a recording.")
+            raise DomainError(
+                "scope_mismatch", "Only a song streams timeline creates a recording."
+            )
         entity = create_object("recording", new_recording_label).entity
     elif entity_id:
         entity = Entity.objects.get(pk=entity_id)
     else:
-        raise DomainError("mapping_required", "Choose what this file measures.", fields={"entity": "Required"})
+        raise DomainError(
+            "mapping_required",
+            "Choose what this file measures.",
+            fields={"entity": "Required"},
+        )
     _apply_mapping(batch, entity)
     _bump(batch)
     batch.summary = _summarise(batch)
     batch.save(update_fields=["summary"])
-    audit("import_batch", batch.pk, "map", {"entity": str(entity.pk), "label": entity.label}, revision=batch.preview_revision)
+    audit(
+        "import_batch",
+        batch.pk,
+        "map",
+        {"entity": str(entity.pk), "label": entity.label},
+        revision=batch.preview_revision,
+    )
     return batch
 
 
 @transaction.atomic
 def refresh_preview(batch_id):
     """Re-check a staged preview against current stored data; bumps the revision if anything changed."""
-    batch = ImportBatch.objects.select_related("source", "mapped_entity").get(pk=batch_id)
+    batch = ImportBatch.objects.select_related("source", "mapped_entity").get(
+        pk=batch_id
+    )
     if batch.state != "staged" or batch.mapped_entity_id is None:
         return batch
     if _classify(batch):
@@ -313,7 +424,11 @@ def approve_conflicts(batch_id, expected_preview_revision, staged_ids, reason):
     batch = batch_for_update(batch_id, expected_preview_revision)
     reason = (reason or "").strip()
     if not reason:
-        raise DomainError("reason_required", "Say why the revised values are correct.", fields={"reason": "Required"})
+        raise DomainError(
+            "reason_required",
+            "Say why the revised values are correct.",
+            fields={"reason": "Required"},
+        )
     qs = batch.staged.filter(classification="conflict")
     if staged_ids != "all":
         qs = qs.filter(pk__in=staged_ids)
@@ -321,30 +436,52 @@ def approve_conflicts(batch_id, expected_preview_revision, staged_ids, reason):
     _bump(batch)
     batch.summary = _summarise(batch)
     batch.save(update_fields=["summary"])
-    audit("import_batch", batch.pk, "approve_revisions", {"count": count, "reason": reason[:500]}, revision=batch.preview_revision)
+    audit(
+        "import_batch",
+        batch.pk,
+        "approve_revisions",
+        {"count": count, "reason": reason[:500]},
+        revision=batch.preview_revision,
+    )
     return batch
 
 
 def commit(batch_id, expected_preview_revision, idempotency_key):
-    return idempotent(idempotency_key, f"import.commit:{batch_id}", lambda: _commit(batch_id, expected_preview_revision))
+    return idempotent(
+        idempotency_key,
+        f"import.commit:{batch_id}",
+        lambda: _commit(batch_id, expected_preview_revision),
+    )
 
 
 def _commit(batch_id, expected_preview_revision):
     batch = batch_for_update(batch_id, expected_preview_revision)
     if batch.mapped_entity_id is None:
-        raise DomainError("mapping_required", "Choose what this file measures before importing.")
+        raise DomainError(
+            "mapping_required", "Choose what this file measures before importing."
+        )
     if batch.issues.exists():
         raise DomainError("invalid_rows", "Fix the invalid rows and upload again.")
     policy = current_policy(batch.source)
     if policy.pk != batch.policy_version_id:
-        raise DomainError("stale_policy", "The source use policy changed since this preview. Start a new preview.", status=409)
+        raise DomainError(
+            "stale_policy",
+            "The source use policy changed since this preview. Start a new preview.",
+            status=409,
+        )
     require_purpose(policy, "store")
     read_raw(batch.raw_file)
     if _classify(batch):
         # Rolled back with this transaction; refresh_preview() persists the new classification on view.
-        raise DomainError("stale_preview", "Stored data changed since this preview. Review the updated preview.", status=409)
+        raise DomainError(
+            "stale_preview",
+            "Stored data changed since this preview. Review the updated preview.",
+            status=409,
+        )
     staged = list(batch.staged.select_related("existing_version", "metric").all())
-    unapproved = [s for s in staged if s.classification == "conflict" and not s.approved]
+    unapproved = [
+        s for s in staged if s.classification == "conflict" and not s.approved
+    ]
     if unapproved:
         raise DomainError(
             "unapproved_revisions",
@@ -352,51 +489,92 @@ def _commit(batch_id, expected_preview_revision):
             status=409,
         )
     now = clock.now()
-    row_ref = lambda s: f"{batch.raw_file.sha256[:12]}:row{s.row_number}:{s.metric.csv_column}"  # noqa: E731
+    row_ref = (
+        lambda s: f"{batch.raw_file.sha256[:12]}:row{s.row_number}:{s.metric.csv_column}"
+    )  # noqa: E731
     new_obs, new_versions, contributions = [], [], []
     for s in staged:
         if s.classification == "new":
             obs = Observation(
-                source=batch.source, entity_id=batch.mapped_entity_id, metric_id=s.metric_id,
-                period_start=s.period_start, period_end=s.period_start + timedelta(days=1),
+                source=batch.source,
+                entity_id=batch.mapped_entity_id,
+                metric_id=s.metric_id,
+                period_start=s.period_start,
+                period_end=s.period_start + timedelta(days=1),
             )
             ver = ObservationVersion(
-                observation=obs, version=1, value=s.value, available_at=now, policy_version=policy, source_row_ref=row_ref(s)
+                observation=obs,
+                version=1,
+                value=s.value,
+                available_at=now,
+                policy_version=policy,
+                source_row_ref=row_ref(s),
             )
             new_obs.append(obs)
             new_versions.append(ver)
-            contributions.append(ObservationContribution(version=ver, batch=batch, row_ref=row_ref(s)))
+            contributions.append(
+                ObservationContribution(version=ver, batch=batch, row_ref=row_ref(s))
+            )
         elif s.classification == "equal":
-            contributions.append(ObservationContribution(version=s.existing_version, batch=batch, row_ref=row_ref(s)))
+            contributions.append(
+                ObservationContribution(
+                    version=s.existing_version, batch=batch, row_ref=row_ref(s)
+                )
+            )
         else:
             prior = s.existing_version
-            top = ObservationVersion.objects.filter(observation_id=prior.observation_id).aggregate(m=Max("version"))["m"]
+            top = ObservationVersion.objects.filter(
+                observation_id=prior.observation_id
+            ).aggregate(m=Max("version"))["m"]
             ver = ObservationVersion(
-                observation_id=prior.observation_id, version=top + 1, value=s.value, available_at=now, policy_version=policy,
-                source_row_ref=row_ref(s), supersedes=prior, revision_reason=s.approval_reason,
+                observation_id=prior.observation_id,
+                version=top + 1,
+                value=s.value,
+                available_at=now,
+                policy_version=policy,
+                source_row_ref=row_ref(s),
+                supersedes=prior,
+                revision_reason=s.approval_reason,
             )
             new_versions.append(ver)
-            contributions.append(ObservationContribution(version=ver, batch=batch, row_ref=row_ref(s)))
+            contributions.append(
+                ObservationContribution(version=ver, batch=batch, row_ref=row_ref(s))
+            )
     Observation.objects.bulk_create(new_obs, batch_size=2000)
     for v in new_versions:
         if v.observation_id is None:
             v.observation_id = v.observation.pk
     ObservationVersion.objects.bulk_create(new_versions, batch_size=2000)
-    ObservationContribution.objects.bulk_create(contributions, batch_size=2000, ignore_conflicts=True)
+    ObservationContribution.objects.bulk_create(
+        contributions, batch_size=2000, ignore_conflicts=True
+    )
     affected = {v.observation_id for v in new_versions}
     _recompute_active(affected)
-    updated = ImportBatch.objects.filter(pk=batch.pk, state="staged", preview_revision=expected_preview_revision).update(
-        state="committed", committed_at=now
-    )
+    updated = ImportBatch.objects.filter(
+        pk=batch.pk, state="staged", preview_revision=expected_preview_revision
+    ).update(state="committed", committed_at=now)
     if updated != 1:
-        raise DomainError("batch_not_staged", "This import was already committed.", status=409)
+        raise DomainError(
+            "batch_not_staged", "This import was already committed.", status=409
+        )
     batch.refresh_from_db()
     summary = _summarise(batch)
-    summary["committed"] = {"new_facts": len(new_obs), "revisions": sum(1 for s in staged if s.classification == "conflict"),
-                            "unchanged": sum(1 for s in staged if s.classification == "equal")}
+    summary["committed"] = {
+        "new_facts": len(new_obs),
+        "revisions": sum(1 for s in staged if s.classification == "conflict"),
+        "unchanged": sum(1 for s in staged if s.classification == "equal"),
+    }
     batch.summary = summary
     batch.save(update_fields=["summary"])
-    emit("observations.changed", {"batch": str(batch.pk), "action": "commit", "entity": str(batch.mapped_entity_id), "at": now.isoformat()})
+    emit(
+        "observations.changed",
+        {
+            "batch": str(batch.pk),
+            "action": "commit",
+            "entity": str(batch.mapped_entity_id),
+            "at": now.isoformat(),
+        },
+    )
     audit("import_batch", batch.pk, "commit", summary["committed"])
     return {"batch_id": str(batch.pk), "state": "committed", **summary["committed"]}
 
@@ -405,7 +583,9 @@ def _recompute_active(observation_ids):
     """Active version = highest version with at least one active contribution."""
     for obs_id in observation_ids:
         top = (
-            ObservationVersion.objects.filter(observation_id=obs_id, contributions__active=True)
+            ObservationVersion.objects.filter(
+                observation_id=obs_id, contributions__active=True
+            )
             .order_by("-version")
             .values_list("pk", flat=True)
             .first()
@@ -414,30 +594,70 @@ def _recompute_active(observation_ids):
 
 
 def undo(batch_id, reason, idempotency_key):
-    return idempotent(idempotency_key, f"import.undo:{batch_id}", lambda: _undo(batch_id, reason))
+    return idempotent(
+        idempotency_key, f"import.undo:{batch_id}", lambda: _undo(batch_id, reason)
+    )
 
 
 def _undo(batch_id, reason):
     reason = (reason or "").strip()
     if not reason:
-        raise DomainError("reason_required", "Say why you are undoing this import.", fields={"reason": "Required"})
+        raise DomainError(
+            "reason_required",
+            "Say why you are undoing this import.",
+            fields={"reason": "Required"},
+        )
     now = clock.now()
-    updated = ImportBatch.objects.filter(pk=batch_id, state="committed").update(state="undone", undone_at=now, undo_reason=reason[:500])
+    updated = ImportBatch.objects.filter(pk=batch_id, state="committed").update(
+        state="undone", undone_at=now, undo_reason=reason[:500]
+    )
     if updated != 1:
-        raise DomainError("not_committed", "Only a committed import can be undone.", status=409)
+        raise DomainError(
+            "not_committed", "Only a committed import can be undone.", status=409
+        )
     batch = ImportBatch.objects.get(pk=batch_id)
-    affected = set(ObservationContribution.objects.filter(batch=batch, active=True).values_list("version__observation_id", flat=True))
+    affected = set(
+        ObservationContribution.objects.filter(batch=batch, active=True).values_list(
+            "version__observation_id", flat=True
+        )
+    )
     ObservationContribution.objects.filter(batch=batch).update(active=False)
     _recompute_active(affected)
-    retained = Observation.objects.filter(pk__in=affected, active_version__isnull=False).count()
-    emit("observations.changed", {"batch": str(batch.pk), "action": "undo", "entity": str(batch.mapped_entity_id), "at": now.isoformat()})
-    audit("import_batch", batch.pk, "undo", {"reason": reason[:500], "affected": len(affected), "still_supported": retained})
-    return {"batch_id": str(batch.pk), "state": "undone", "affected": len(affected), "still_supported": retained}
+    retained = Observation.objects.filter(
+        pk__in=affected, active_version__isnull=False
+    ).count()
+    emit(
+        "observations.changed",
+        {
+            "batch": str(batch.pk),
+            "action": "undo",
+            "entity": str(batch.mapped_entity_id),
+            "at": now.isoformat(),
+        },
+    )
+    audit(
+        "import_batch",
+        batch.pk,
+        "undo",
+        {
+            "reason": reason[:500],
+            "affected": len(affected),
+            "still_supported": retained,
+        },
+    )
+    return {
+        "batch_id": str(batch.pk),
+        "state": "undone",
+        "affected": len(affected),
+        "still_supported": retained,
+    }
 
 
 @transaction.atomic
 def cancel_preview(batch_id):
-    updated = ImportBatch.objects.filter(pk=batch_id, state__in=["staged", "invalid"]).update(state="rejected")
+    updated = ImportBatch.objects.filter(
+        pk=batch_id, state__in=["staged", "invalid"]
+    ).update(state="rejected")
     if updated != 1:
         raise DomainError("not_staged", "Only a preview can be cancelled.", status=409)
     audit("import_batch", batch_id, "cancel")
@@ -447,7 +667,9 @@ def cancel_preview(batch_id):
 
 
 def active_observations(entity=None, metric=None, purpose="display"):
-    qs = Observation.objects.filter(active_version__isnull=False).select_related("active_version__policy_version", "metric", "entity")
+    qs = Observation.objects.filter(active_version__isnull=False).select_related(
+        "active_version__policy_version", "metric", "entity"
+    )
     if entity is not None:
         qs = qs.filter(entity=entity)
     if metric is not None:
@@ -470,11 +692,19 @@ def series(entity, metric_id, purpose="display", start=None, end=None):
 
 
 def data_through(entity, metric_id):
-    return active_observations(entity=entity).filter(metric_id=metric_id).aggregate(m=Max("period_start"))["m"]
+    return (
+        active_observations(entity=entity)
+        .filter(metric_id=metric_id)
+        .aggregate(m=Max("period_start"))["m"]
+    )
 
 
 def committed_entities():
-    ids = Observation.objects.filter(active_version__isnull=False).values_list("entity_id", flat=True).distinct()
+    ids = (
+        Observation.objects.filter(active_version__isnull=False)
+        .values_list("entity_id", flat=True)
+        .distinct()
+    )
     return list(Entity.objects.filter(pk__in=ids).order_by("kind", "label"))
 
 
@@ -489,7 +719,9 @@ def _safe_cell(value):
 def export_source_shaped(entity, purpose="export"):
     obs = list(active_observations(entity=entity).filter(metric__provider=S4A))
     if not obs:
-        raise DomainError("no_data", "No stored Spotify data for this item.", status=404)
+        raise DomainError(
+            "no_data", "No stored Spotify data for this item.", status=404
+        )
     for o in obs:
         require_purpose(o.active_version.policy_version, purpose)
     scope = "artist" if entity.kind == "artist" else "recording"
@@ -504,13 +736,52 @@ def export_source_shaped(entity, purpose="export"):
 def export_common(entity=None, purpose="export"):
     out = io.StringIO()
     writer = csv.writer(out, lineterminator="\n")
-    writer.writerow(["provider", "entity_scope", "entity_id", "entity_label", "metric_id", "metric_label", "period_start_utc",
-                     "period_end_utc", "value", "version", "available_at_utc", "source_row_ref", "contributing_imports"])
-    qs = active_observations(entity=entity).order_by("entity__label", "metric_id", "period_start").prefetch_related("active_version__contributions")
+    writer.writerow(
+        [
+            "provider",
+            "entity_scope",
+            "entity_id",
+            "entity_label",
+            "metric_id",
+            "metric_label",
+            "period_start_utc",
+            "period_end_utc",
+            "value",
+            "version",
+            "available_at_utc",
+            "source_row_ref",
+            "contributing_imports",
+        ]
+    )
+    qs = (
+        active_observations(entity=entity)
+        .order_by("entity__label", "metric_id", "period_start")
+        .prefetch_related("active_version__contributions")
+    )
     for o in qs:
         v = o.active_version
         require_purpose(v.policy_version, purpose)
-        batches = ";".join(sorted(str(c.batch_id) for c in v.contributions.all() if c.active))
-        writer.writerow([_safe_cell(x) for x in [o.metric.provider, o.metric.scope_kind, o.entity_id, o.entity.label, o.metric_id, o.metric.label,
-                         o.period_start.isoformat(), o.period_end.isoformat(), v.value, v.version, v.available_at.isoformat(), v.source_row_ref, batches]])
+        batches = ";".join(
+            sorted(str(c.batch_id) for c in v.contributions.all() if c.active)
+        )
+        writer.writerow(
+            [
+                _safe_cell(x)
+                for x in [
+                    o.metric.provider,
+                    o.metric.scope_kind,
+                    o.entity_id,
+                    o.entity.label,
+                    o.metric_id,
+                    o.metric.label,
+                    o.period_start.isoformat(),
+                    o.period_end.isoformat(),
+                    v.value,
+                    v.version,
+                    v.available_at.isoformat(),
+                    v.source_row_ref,
+                    batches,
+                ]
+            ]
+        )
     return out.getvalue().encode()

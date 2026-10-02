@@ -157,11 +157,29 @@ def campaign_preview(request, body, key):
         "type": ctype, "start_date": catalogue.parse_date(payload["start_date"]), "end_date": catalogue.parse_date(payload["end_date"]),
         "key_date": key_date, "object_label": label, "primary_metric": metric, "resources": resources,
     })
+    evidence = {"activities": [], "gaps": [], "llm_used": False}
+    if body.get("use_evidence"):
+        from intelligence.synthesis import generate_evidence_activities
+
+        evidence = generate_evidence_activities(
+            {**payload, "key_date": key_date.isoformat() if key_date else None, "timezone": instance.load()["timezone"], "resources": resources},
+            preview,
+        )
+        preview = {
+            **preview,
+            "activities": preview["activities"] + evidence.get("activities", []),
+            "gaps": evidence.get("gaps", preview.get("gaps", [])),
+            "planning_notes": evidence.get("planning_notes") or [],
+            "composition": evidence.get("composition") or {},
+            "evidence_bundle": evidence.get("bundle"),
+            "llm_used": evidence.get("llm_used"),
+            "recommendation_id": evidence.get("recommendation_id"),
+        }
     html = render_to_string("web/dialogs/_campaign_review.html", {
         "preview": preview, "payload": payload, "type_label": registry.type_label(ctype), "metric": metric,
         "channels": registry.CHANNELS, "resources": resources, "object_label": label,
     }, request=request)
-    return {"html": html, "template_version": preview["template_version"]}
+    return {"html": html, "template_version": preview["template_version"], "evidence": evidence}
 
 
 @api
@@ -347,6 +365,60 @@ def musicbrainz_search(request, body, key):
         return musicbrainz.search_artists(body.get("artist", "").strip())
 
     return idempotent(key, "musicbrainz.search", run)
+
+
+@api
+def ask_question(request, body, key):
+    from intelligence.ask_service import answer_question
+
+    question = (body.get("question") or "").strip()
+    if not question:
+        raise DomainError("question_required", "Enter a question.", fields={"question": "Required"})
+
+    def run():
+        ex = answer_question(question, body.get("scope") or {})
+        return {"exchange_id": str(ex.pk), "answer": ex.answer, "redirect": "/ask"}
+
+    return idempotent(key, "ask.question", run)
+
+
+@api
+@api
+def experiment_create(request, body, key, campaign_id):
+    from intelligence.experiments_service import create_experiment
+
+    return create_experiment(campaign_id, body, key)
+
+
+@api
+def experiment_approve(request, body, key, experiment_id):
+    from intelligence.experiments_service import approve_experiment
+
+    return approve_experiment(experiment_id, key)
+
+
+@api
+def experiment_start(request, body, key, experiment_id):
+    from intelligence.experiments_service import start_experiment
+
+    return start_experiment(experiment_id, key)
+
+
+@api
+def experiment_review(request, body, key, experiment_id):
+    from intelligence.experiments_service import review_experiment
+
+    return review_experiment(experiment_id, body, key)
+
+
+@api
+def adaptation_decide(request, body, key, proposal_id):
+    from intelligence.adaptations import decide
+
+    action = body.get("action")
+    if action not in ("accept", "reject"):
+        raise DomainError("invalid_action", "Choose accept or reject.")
+    return decide(proposal_id, action, key)
 
 
 @api

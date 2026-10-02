@@ -1,0 +1,13 @@
+{
+  "stage": 3,
+  "amendment": "ADR-0004-planning-relevance",
+  "cases": [
+    {"id": "PA01", "title": "Follower growth includes Story without metric gate", "expected": "ig_story_teaser selected; planning_hypothesis without fake evidence_backed"},
+    {"id": "PA02", "title": "Hard exclusions remain", "expected": "email_list_missing, assets_after_window_start still exclude"},
+    {"id": "PA03", "title": "Release vs growth needs differ", "expected": "needs-v1 role_priorities differ by campaign group"},
+    {"id": "PA04", "title": "Strict evidence slices", "expected": "Tactic refs only on observable_metrics; metric_ids_match not used for selection"},
+    {"id": "PA05", "title": "Deterministic composition", "expected": "Same inputs and compose-v1 produce same selected tactic ids"},
+    {"id": "PA06", "title": "Provenance on approval", "expected": "strategic_fit and tactics-v3 on activity origin_detail"},
+    {"id": "PA07", "title": "Ask uses stored decisions", "expected": "planning_decision facts from RecommendationRecord meta"}
+  ]
+}

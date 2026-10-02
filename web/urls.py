@@ -60,6 +60,12 @@ urlpatterns = [
     path("api/peers/promote", api.peer_promote),
     path("api/peers/reject", api.peer_reject),
     path("api/musicbrainz/search", api.musicbrainz_search),
+    path("api/ask", api.ask_question),
+    path("api/adaptations/<uuid:proposal_id>/decide", api.adaptation_decide),
+    path("api/campaigns/<uuid:campaign_id>/experiments", api.experiment_create),
+    path("api/experiments/<uuid:experiment_id>/approve", api.experiment_approve),
+    path("api/experiments/<uuid:experiment_id>/start", api.experiment_start),
+    path("api/experiments/<uuid:experiment_id>/review", api.experiment_review),
     path("api/backups", api.backup_now),
     re_path(r"^static/(?P<path>(css|js)/[A-Za-z0-9_.-]+)$", serve, {"document_root": settings.STATIC_ROOT_SOURCE}),
 ]

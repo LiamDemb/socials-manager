@@ -38,7 +38,7 @@ Strategy gives the supported course of action and evidence gaps, Outcomes gives 
 
 Primary: purpose/title, planned date/time + compact Timing link, channel/format, practical concept/brief/CTA/assets, matched references and execution controls. Use groups, subtle surfaces/rules and labelled states to distinguish making, reasoning and execution. Full rationale/evidence/audit/protocol stays secondary.
 
-Why? shows concise recommendation reason, supporting finding and limitations, then optional observation/source detail. Distinguish a creative draft with a small provenance label. Show qualitative support only where it helps a decision. Sources show name/link, dates, extracted influence and scope rather than citations on every calendar cell.
+Why? shows concise recommendation reason, supporting finding and limitations, then optional observation/source detail. Default activity line: **Role**, **basis** (evidence-backed, transfer hypothesis, planning hypothesis, operational). Progressive disclosure: contribution rationale, supported proposition, transfer limits, planning decision codes from stored recommendation meta. Distinguish creative drafts and planning hypotheses from evidence-backed work. Sources show name/link, dates, extracted influence and scope rather than citations on every calendar cell.
 
 Manual work remains allowed and visibly user-authored. A manually selected timestamp need not claim evidence support. Changes preserve original provenance and mark incompatible timing/protocol assumptions for review.
 

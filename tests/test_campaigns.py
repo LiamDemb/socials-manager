@@ -83,7 +83,7 @@ class CampaignFirst(TestCase):
                                        "key_date": song.key_date, "object_label": song.label, "primary_metric": metric})
         keys = [a["template_key"] for a in preview["activities"]]
         self.assertIn("anchor", keys)
-        self.assertTrue(any("No eligible evidence" in g for g in preview["gaps"]))
+        self.assertFalse(any("No eligible evidence yet" in g for g in preview["gaps"]))
         acts = [{**a, "selected": a["template_key"] != "links"} for a in preview["activities"]]
         payload = {"type": "single", "name": "S", "start_date": "2026-10-01", "end_date": "2026-10-31",
                    "object": {"mode": "existing", "id": str(song.pk)},

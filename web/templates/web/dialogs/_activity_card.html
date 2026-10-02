@@ -1,4 +1,4 @@
-{% load be %}<article class="card proposal" data-activity-card data-origin="{% if manual %}manual{% else %}operational_template{% endif %}" data-template-key="{{ item.template_key|default:'' }}" data-kind="{{ item.kind|default:'content' }}" data-effort="{{ item.effort_minutes|default:30 }}" data-basis="{{ item.basis|default:'Your schedule' }}">
+{% load be %}<article class="card proposal" data-activity-card data-origin="{% if manual %}manual{% else %}{{ item.origin|default:'operational_template' }}{% endif %}" data-template-key="{{ item.template_key|default:'' }}" data-kind="{{ item.kind|default:'content' }}" data-effort="{{ item.effort_minutes|default:30 }}" data-basis="{{ item.basis|default:'Your schedule' }}">
   <div class="proposal-head">
     <label class="check"><input type="checkbox" data-field="selected" checked> <span class="sr-only">Include</span></label>
     <input class="title-input" data-field="title" value="{{ item.title|default:'' }}" aria-label="Activity title" placeholder="Activity title" maxlength="200">
@@ -15,7 +15,9 @@
     </label>
     <label>Format <input data-field="format" value="{{ item.format|default:'' }}" maxlength="40"></label>
   </div>
-  <p class="meta"><span class="badge tone-muted">{% if manual %}Your schedule{% else %}{{ item.basis }}{% endif %}</span>{% if item.kind == "milestone" %} Fixed date{% endif %}</p>
+  <p class="meta"><span class="badge tone-muted">{% if manual %}Your schedule{% else %}{{ item.basis }}{% endif %}</span>{% if item.kind == "milestone" %} Fixed date{% endif %}{% with prov=item.provenance %}{% if prov.role %} · Role: {{ prov.role|title }}{% endif %}{% if prov.support_display %} · {{ prov.support_display }}{% endif %}{% endwith %}</p>
   {% if manual %}<label>Purpose <textarea data-field="purpose" rows="2" maxlength="2000"></textarea></label>
   {% elif item.purpose %}<details><summary>Purpose</summary><textarea data-field="purpose" rows="2" maxlength="2000" aria-label="Purpose">{{ item.purpose }}</textarea></details>{% endif %}
+  {% if item.scheduling_json %}<input type="hidden" data-field="scheduling" value="{{ item.scheduling_json|escape }}">{% endif %}
+  {% if item.evidence_ids %}<input type="hidden" data-field="evidence_ids" value="{{ item.evidence_ids|join:',' }}">{% endif %}
 </article>

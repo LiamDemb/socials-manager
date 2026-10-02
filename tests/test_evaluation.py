@@ -91,22 +91,18 @@ class AsOfMechanics(TestCase):
 
 
 class SpotifyGate(TestCase):
-    def test_spotify_fit_is_blocked_by_policy(self):
+    def test_spotify_fit_policy_gate_follows_source_policy(self):
         bootstrap()
         from catalogue.services import create_object
 
         song = create_object("recording", "S")
         import_file(recording_csv([("2026-09-24", 50), ("2026-09-25", 60)]), "s.csv", recording=song)
         gates = gate_report(song.entity, "spotify.recording.streams.v1")
-        self.assertEqual(gates["policy"]["status"], "Blocked")
+        self.assertEqual(gates["policy"]["status"], "Passed")
         self.assertEqual(gates["history"]["status"], "Insufficient data")
         self.assertFalse(gates["fit_allowed"])
-        with self.assertRaises(PolicyDenied):
+        with self.assertRaises(DomainError):
             freeze_manifest(song.entity, "spotify.recording.streams.v1", utc(2026, 10, 1), CRITERIA)
-        with self.assertRaises(PolicyDenied):
-            as_of_series(song.entity, "spotify.recording.streams.v1", utc(2026, 10, 1), "statistical_fit")
-        with clock.frozen(utc(2026, 10, 1)), self.assertRaises(PolicyDenied):
-            record_prospective(song.entity, "spotify.recording.streams.v1", "recent_mean_7", date(2026, 10, 5))
 
     @unittest.skipUnless(real_fixture("better-man-streams.csv"), "Not run: real fixtures not configured")
     def test_real_five_active_days_are_insufficient(self):
@@ -115,4 +111,4 @@ class SpotifyGate(TestCase):
         gates = gate_report(batch.mapped_entity, "spotify.recording.streams.v1")
         self.assertEqual(gates["history"]["status"], "Insufficient data")
         self.assertIn("5 active days of 1002", gates["history"]["detail"])
-        self.assertEqual(gates["policy"]["status"], "Blocked")
+        self.assertEqual(gates["policy"]["status"], "Passed")

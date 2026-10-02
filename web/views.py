@@ -77,9 +77,20 @@ def campaign(request, campaign_id, tab="calendar"):
         ctx["outcomes"] = p.outcome_rows(Campaign.objects.filter(pk=c.pk))
         ctx["roles"] = {link.outcome_version_id: link.role for link in c.outcome_links.all()}
     if tab == "strategy":
+        from intelligence.models import RecommendationRecord
+
         acts = list(c.activities.all())
-        ctx["counts"] = {"total": len(acts), "operational": sum(a.origin == "operational_template" for a in acts),
-                         "manual": sum(a.origin == "manual" for a in acts)}
+        ctx["counts"] = {
+            "total": len(acts),
+            "operational": sum(a.origin == "operational_template" for a in acts),
+            "manual": sum(a.origin == "manual" for a in acts),
+            "evidence": sum(a.origin == "evidence_recommendation" for a in acts),
+        }
+        rec = RecommendationRecord.objects.filter(campaign=c).order_by("-created_at").first()
+        ctx["strategy_gaps"] = (rec.evidence_bundle or {}).get("gaps") if rec else []
+        ctx["strategy_composition"] = ((rec.payload or {}).get("meta") or {}) if rec else {}
+        if not ctx["strategy_gaps"] and not ctx["counts"]["evidence"]:
+            ctx["strategy_gaps"] = ["No evidence-backed activities on this campaign yet."]
     return page(request, "web/campaign.html", "campaigns", c.name, **ctx)
 
 
@@ -226,8 +237,17 @@ def placeholder(request, section):
         refs = InspirationReference.objects.order_by("-retrieved_at")[:50]
         return page(request, "web/inspiration.html", "inspiration", "Inspiration", refs=refs)
     if section == "ask":
-        return page(request, "web/placeholder.html", "ask", "Ask", heading="Ask is unavailable.",
-                    body="Ask needs an approved model provider and permitted evidence, and neither is configured. Everything else in the app works without it.")
+        from intelligence.llm_adapter import health
+        from intelligence.models import AskExchange
+
+        return page(
+            request,
+            "web/ask.html",
+            "ask",
+            "Ask",
+            llm=health(),
+            exchanges=AskExchange.objects.all()[:10],
+        )
     raise Http404
 
 

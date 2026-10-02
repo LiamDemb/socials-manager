@@ -1,0 +1,11 @@
+{
+  "stage": 3,
+  "cases": [
+    {"id": "AC21", "title": "Evidence-backed generation and abstention", "expected": "Eligible tactics or explicit gaps; no invented evidence"},
+    {"id": "AC22", "title": "Constrained scheduling", "expected": "SchedulingDecision or disclosed fallback basis"},
+    {"id": "AC23", "title": "Adaptation review", "expected": "Accept/reject idempotent; stale revision blocked"},
+    {"id": "AC24", "title": "Experiment lifecycle", "expected": "No causal claims; frozen protocol"},
+    {"id": "AC32", "title": "LLM benchmark / fallback", "expected": "ADR, qualification command, citation validation"},
+    {"id": "AC33", "title": "Grounded Ask", "expected": "Citations checked; injection sanitized"}
+  ]
+}

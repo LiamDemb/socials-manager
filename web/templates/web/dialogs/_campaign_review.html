@@ -7,8 +7,14 @@
   </section>
   <section class="gaps" aria-label="Evidence gaps">
     <h3 class="h4">Evidence gaps</h3>
-    <ul>{% for g in preview.gaps %}<li>{{ g }}</li>{% endfor %}</ul>
+    <ul>{% for g in preview.gaps %}<li>{{ g }}</li>{% empty %}<li>No measurement gaps flagged for the primary outcome window.</li>{% endfor %}</ul>
   </section>
+  {% if preview.planning_notes %}
+  <section class="planning-notes" aria-label="Planning notes">
+    <h3 class="h4">Planning notes</h3>
+    <ul>{% for n in preview.planning_notes %}<li>{{ n }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
   <section>
     <div class="section-head"><h3 class="h4">Proposed work</h3><span class="meta">Untick anything you do not want. Edit dates freely.</span></div>
     <div class="proposal-list" data-proposal-list>

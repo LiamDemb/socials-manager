@@ -1,0 +1,37 @@
+{% extends "web/base.html" %}{% load be %}
+{% block content %}
+<section class="section card">
+  <div class="section-head">
+    <h2>Ask</h2>
+    <span class="badge tone-{% if llm.state == 'ready' %}good{% else %}warn{% endif %}">{{ llm.backend|humanise }}</span>
+  </div>
+  <p class="meta">Ask reads stored Instagram, Spotify, catalogue, campaign, finding and peer records. It does not create or change anything. Each answer lists the records it used.</p>
+  <form id="ask-form" class="stack" data-api="/api/ask" data-after="reload">
+    <label>Question <textarea name="question" rows="3" maxlength="2000" required placeholder="What does our recent Spotify data suggest about posting cadence?"></textarea></label>
+    <button class="button primary" type="submit">Ask</button>
+    <p class="form-error" role="alert"></p>
+  </form>
+</section>
+{% if exchanges %}
+<section class="section">
+  <h3 class="h4">Recent</h3>
+  {% for ex in exchanges %}
+  <article class="card">
+    <p><strong>Q:</strong> {{ ex.question }}</p>
+    <p>{{ ex.answer.text }}</p>
+    {% if ex.answer.facts %}
+    <ul class="plain">{% for f in ex.answer.facts %}<li><span class="badge tone-muted">Fact</span> {{ f.text }}{% if f.evidence_id %} <code>{{ f.evidence_id }}</code>{% endif %}</li>{% endfor %}</ul>
+    {% endif %}
+    {% if ex.answer.basis %}
+    <details>
+      <summary>Based on {{ ex.answer.basis|length }} of {{ ex.answer.basis_count }} stored records</summary>
+      <ul class="plain">{% for b in ex.answer.basis %}<li><span class="badge tone-muted">{{ b.source }}</span> {{ b.text }}</li>{% endfor %}</ul>
+    </details>
+    {% endif %}
+    {% if ex.answer.gaps %}<p class="meta">Gaps: {{ ex.answer.gaps|join:"; " }}</p>{% endif %}
+    <p class="meta">Backend: {{ ex.generation.backend }}{% if ex.generation.error %} · {{ ex.generation.error }}{% endif %} · {{ ex.created_at|local }}</p>
+  </article>
+  {% endfor %}
+</section>
+{% endif %}
+{% endblock %}

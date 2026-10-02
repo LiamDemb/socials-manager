@@ -74,7 +74,11 @@ class CampaignOutcome(models.Model):
 class Activity(models.Model):
     STATUSES = [("planned", "Planned"), ("completed", "Completed"), ("skipped", "Skipped"), ("cancelled", "Cancelled")]
     KINDS = [("content", "Content"), ("operational", "Operational task"), ("milestone", "Milestone")]
-    ORIGINS = [("manual", "Added by you"), ("operational_template", "From your campaign dates")]
+    ORIGINS = [
+        ("manual", "Added by you"),
+        ("operational_template", "From your campaign dates"),
+        ("evidence_recommendation", "Evidence-backed suggestion"),
+    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     campaign = models.ForeignKey(Campaign, on_delete=models.PROTECT, related_name="activities")
     title = models.CharField(max_length=200)

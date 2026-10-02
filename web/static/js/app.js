@@ -433,6 +433,7 @@ function campaignFlow(frame) {
   if (!form) return;
   let step = 1;
   let createKey = null;
+  let previewRecommendationId = null;
   const labels = { 1: '1 of 3 · Purpose and outcomes', 2: '2 of 3 · Resources', 3: '3 of 3 · Review' };
   const field = (name) => form.elements.namedItem(name);
   const objectBlock = $('[data-object-block]', form);
@@ -520,17 +521,24 @@ function campaignFlow(frame) {
     if (field('supporting_metric_id').value) {
       data.supporting_outcomes.push({ mode: 'new', metric_id: field('supporting_metric_id').value, outcome_mode: field('supporting_mode').value, target: field('supporting_target').value });
     }
+    if (previewRecommendationId || form.dataset.recommendationId) {
+      data.recommendation_id = previewRecommendationId || form.dataset.recommendationId;
+    }
     return data;
   }
 
   function cards() {
     return $$('[data-activity-card]', form).map((card) => {
       const get = (f) => card.querySelector(`[data-field="${f}"]`);
+      const sched = get('scheduling');
+      const evid = get('evidence_ids');
       return {
         selected: get('selected').checked, title: get('title').value, date: get('date').value || null, time: get('time').value || null,
         channel: get('channel').value, format: get('format').value, purpose: get('purpose')?.value || '',
         origin: card.dataset.origin, template_key: card.dataset.templateKey || null, kind: card.dataset.kind,
         effort_minutes: card.dataset.effort, basis: card.dataset.basis, edited: !!card.dataset.edited,
+        scheduling: sched?.value ? JSON.parse(sched.value) : null,
+        evidence_ids: evid?.value ? evid.value.split(',').filter(Boolean) : [],
       };
     });
   }
@@ -568,7 +576,8 @@ function campaignFlow(frame) {
       const btn = $('[data-step-next]', frame);
       btn.disabled = true;
       btn.textContent = 'Preparing review…';
-      const res = await callAPI('/api/campaigns/preview', { campaign: payload() }, newKey());
+      const useEvidence = !!form.querySelector('[name="use_evidence"]')?.checked;
+      const res = await callAPI('/api/campaigns/preview', { campaign: payload(), use_evidence: useEvidence }, newKey());
       btn.disabled = false;
       btn.textContent = 'Continue';
       if (res.error) {
@@ -578,6 +587,8 @@ function campaignFlow(frame) {
         return;
       }
       $('[data-review-slot]', form).innerHTML = res.data.html;
+      previewRecommendationId = res.data.evidence?.recommendation_id || res.data.recommendation_id || null;
+      form.dataset.recommendationId = previewRecommendationId || '';
       createKey = null;
       show(3);
     }

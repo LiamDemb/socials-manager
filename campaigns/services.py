@@ -172,7 +172,6 @@ def preview_operational(data):
     assets = resources.get("assets_ready_date")
     if assets and key_date and assets > key_date:
         gaps.append("Assets are ready after the key date. Plan content after the assets date.")
-    gaps.insert(0, "No eligible evidence yet, so no evidence-backed tactics are proposed. Add your own activities below.")
     return {"activities": sorted(items, key=lambda i: i["date"]), "gaps": gaps, "template_version": registry.TEMPLATE_VERSION}
 
 
@@ -210,7 +209,19 @@ def _validate_resources(raw):
 
 
 def _jsonable_resources(res):
-    return {k: (v.isoformat() if isinstance(v, date) else [x.isoformat() for x in v] if k == "blackout_dates" else v) for k, v in res.items()}
+    from core.jsonutil import jsonable_snapshot
+
+    return jsonable_snapshot(res)
+
+
+def jsonable_campaign_draft(payload: dict) -> dict:
+    """Campaign create/preview payload safe to store in JSONField."""
+    from core.jsonutil import jsonable_snapshot
+
+    out = dict(payload)
+    if "resources" in out and isinstance(out["resources"], dict):
+        out["resources"] = jsonable_snapshot(out["resources"])
+    return jsonable_snapshot(out)
 
 
 def resolve_object(ctype, obj_data, tz_name):
@@ -346,14 +357,37 @@ def _create_campaign(payload):
         if not item.get("selected", True):
             continue
         fields = _clean_activity(item, campaign, tz_name)
-        origin = "operational_template" if item.get("origin") == "operational_template" else "manual"
-        detail = {"template_key": item.get("template_key"), "template_version": registry.TEMPLATE_VERSION,
-                  "basis": item.get("basis") or ("Your schedule" if origin == "manual" else "Campaign constraint")}
+        raw_origin = item.get("origin") or "manual"
+        if raw_origin == "operational_template":
+            origin = "operational_template"
+        elif raw_origin == "evidence_recommendation":
+            origin = "evidence_recommendation"
+        else:
+            origin = "manual"
+        detail = {
+            "template_key": item.get("template_key"),
+            "template_version": registry.TEMPLATE_VERSION,
+            "basis": item.get("basis") or ("Your schedule" if origin == "manual" else "Campaign constraint"),
+            "evidence_ids": item.get("evidence_ids") or [],
+            "generation": item.get("generation") or {},
+            "provenance": item.get("provenance") or {},
+            "recommendation_id": item.get("recommendation_id") or payload.get("recommendation_id"),
+            "bundle_fingerprint": (item.get("provenance") or {}).get("bundle_fingerprint"),
+        }
         if origin == "operational_template" and item.get("edited"):
             detail["edited_by_owner"] = True
         activity = Activity.objects.create(campaign=campaign, origin=origin, origin_detail=detail, created_at=clock.now(), **fields)
         ActivityOutcome.objects.create(activity=activity, outcome_version=primary)
+        if item.get("scheduling"):
+            from intelligence.synthesis import persist_scheduling
+
+            persist_scheduling(activity, item["scheduling"])
         created.append(str(activity.pk))
+    rec_id = payload.get("recommendation_id")
+    if rec_id:
+        from intelligence.synthesis import attach_recommendation_to_campaign
+
+        attach_recommendation_to_campaign(rec_id, campaign.pk)
     audit("campaign", campaign.pk, "create", {"type": ctype, "status": status, "activities": len(created), "primary_outcome": str(primary.pk)})
     return {"campaign_id": str(campaign.pk), "activities": created, "primary_outcome_version_id": str(primary.pk)}
 

@@ -21,13 +21,22 @@
 {% elif tab == "strategy" %}
   <section class="section card prose">
     <h2>Course of action</h2>
-    <p>This campaign has {{ counts.total }} activit{{ counts.total|pluralize:"y,ies" }}: {{ counts.operational }} operational task{{ counts.operational|pluralize }} from your dates and {{ counts.manual }} you added.</p>
+    <p>This campaign has {{ counts.total }} activit{{ counts.total|pluralize:"y,ies" }}: {{ counts.operational }} operational, {{ counts.evidence }} evidence-backed, {{ counts.manual }} you added.</p>
     <h3>Evidence gaps</h3>
     <ul>
-      <li>No eligible evidence yet, so there are no evidence-backed tactics or timing recommendations. Activities are your schedule.</li>
+      {% for g in strategy_gaps %}<li>{{ g }}</li>{% empty %}<li>No stored evidence gaps for this campaign.</li>{% endfor %}
       <li>Completing an activity records what happened. It does not count as progress; outcomes move only with imported data.</li>
       {% if c.resources.email_excluded %}<li>Email was selected without a confirmed opted-in list, so email work is excluded.</li>{% endif %}
     </ul>
+    {% if strategy_composition.selected %}
+    <h3>Planning decisions</h3>
+    <p class="meta">Policy {{ strategy_composition.composition_policy|default:"compose-v1" }} · catalogue {{ strategy_composition.tactic_catalogue_version|default:"tactics-v3" }}</p>
+    <ul>
+      {% for s in strategy_composition.selected %}
+      <li><strong>{{ s.tactic_id }}</strong>{% if s.strategic_fit.roles %} — role {{ s.strategic_fit.roles|join:", " }}{% endif %}{% if s.evidence_support.support_label %} · {{ s.evidence_support.support_label }}{% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
     {% if c.resources.channels %}<h3>Resources</h3><p>Channels: {% for ch in c.resources.channels %}{{ ch|channel_label }}{% if not forloop.last %}, {% endif %}{% endfor %}{% if c.resources.audience %}. Audience: {{ c.resources.audience }}{% endif %}</p>{% endif %}
   </section>
 {% elif tab == "outcomes" %}
