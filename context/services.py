@@ -5,7 +5,7 @@ from core.services import audit
 
 from sources import lastfm, meta_graph, musicbrainz
 
-from .models import InspirationReference, PeerCandidate, PeerCollectionEntry, PeerProfile, ReviewedContextItem
+from .models import InspirationReference, PeerCandidate, PeerCollectionEntry, PeerMedia, PeerProfile, ReviewedContextItem
 
 MAX_CURATED_PEERS = 50
 
@@ -96,11 +96,30 @@ def reject_candidate(candidate_id, reason=""):
     return c
 
 
+def _coverage_report(peer, entry):
+    collected = peer.media.count()
+    reported = (entry.last_snapshot or {}).get("fields", {}).get("media_count")
+    if reported is None and isinstance(entry.last_snapshot, dict):
+        reported = entry.last_snapshot.get("media_count_reported")
+    frac = None
+    if reported and int(reported) > 0:
+        frac = round(collected / int(reported), 3)
+    return {
+        "collected_posts": collected,
+        "reported_media_count": reported,
+        "coverage_fraction": frac,
+        "cursor": entry.cursor,
+        "last_error": entry.last_error,
+        "state": entry.state,
+    }
+
+
 def run_peer_collection_batch(limit=3):
-    """Rate-aware resumable peer public metric collection via Business Discovery."""
+    """Rate-aware resumable peer public metric and media collection via Business Discovery."""
     entries = (
         PeerCollectionEntry.objects.select_related("peer")
-        .filter(state__in=["queued", "failed"], peer__review_state="reviewed", peer__instagram_username__gt="")
+        .filter(state__in=["queued", "failed", "ok"], peer__review_state="reviewed", peer__instagram_username__gt="")
+        .exclude(state="blocked")
         .order_by("updated_at")[:limit]
     )
     results = []
@@ -111,24 +130,71 @@ def run_peer_collection_batch(limit=3):
         entry.save(update_fields=["state", "attempts", "updated_at"])
         username = entry.peer.instagram_username
         snap = meta_graph.business_discovery(username)
-        entry.last_snapshot = snap
-        if snap["state"] == "ok":
-            entry.state = "ok"
-            entry.last_error = ""
-            entry.peer.collection_health = {"state": "ok", "at": clock.now().isoformat(), "fields": list(snap.get("fields", {}).keys())}
-        elif snap["state"] == "blocked":
+        entry.last_snapshot = {**(snap if isinstance(snap, dict) else {}), "profile": snap}
+        if snap.get("state") == "ok":
+            after = (entry.cursor or {}).get("media_after")
+            page = meta_graph.business_discovery_media(username, after=after)
+            stored = 0
+            if page.get("state") == "ok":
+                for item in page.get("items") or []:
+                    ext = str(item.get("id") or "")
+                    if not ext:
+                        continue
+                    PeerMedia.objects.update_or_create(
+                        peer=entry.peer,
+                        external_id=ext,
+                        defaults={
+                            "permalink": item.get("permalink") or "",
+                            "caption": (item.get("caption") or "")[:8000],
+                            "media_type": item.get("media_type") or "",
+                            "published_at": item.get("timestamp"),
+                            "snapshot": item,
+                            "collected_at": clock.now(),
+                        },
+                    )
+                    stored += 1
+                entry.cursor = {"media_after": page.get("next_after")}
+                if not page.get("next_after"):
+                    entry.state = "ok"
+                else:
+                    entry.state = "queued"
+            elif page.get("state") == "blocked":
+                entry.state = "blocked"
+                entry.last_error = page.get("reason", "")[:300]
+            else:
+                entry.state = "failed"
+                entry.last_error = (page.get("error") or "")[:300]
+            entry.last_error = entry.last_error or ""
+            cov = _coverage_report(entry.peer, entry)
+            entry.peer.collection_health = {
+                "state": entry.state,
+                "at": clock.now().isoformat(),
+                "coverage": cov,
+                "last_page_stored": stored,
+            }
+        elif snap.get("state") == "blocked":
             entry.state = "blocked"
             entry.last_error = snap.get("reason", "")[:300]
-            entry.peer.collection_health = {"state": "blocked"}
+            entry.peer.collection_health = {"state": "blocked", "coverage": _coverage_report(entry.peer, entry)}
         else:
-            entry.state = "unavailable" if snap["state"] == "unavailable" else "failed"
+            entry.state = "unavailable" if snap.get("state") == "unavailable" else "failed"
             entry.last_error = (snap.get("error") or snap.get("reason") or "")[:300]
-            entry.peer.collection_health = {"state": entry.state}
+            entry.peer.collection_health = {"state": entry.state, "coverage": _coverage_report(entry.peer, entry)}
         entry.updated_at = clock.now()
         entry.save()
         entry.peer.save(update_fields=["collection_health"])
-        results.append({"peer": entry.peer.label, "state": entry.state})
+        results.append({"peer": entry.peer.label, "state": entry.state, "coverage": entry.peer.collection_health.get("coverage")})
     return results
+
+
+def peer_collection_audit():
+    """Document current pipeline capabilities for owner review."""
+    return {
+        "profile_snapshot": "meta_graph.business_discovery",
+        "media_pagination": "meta_graph.business_discovery_media",
+        "cursor_field": "PeerCollectionEntry.cursor.media_after",
+        "manual_inspiration_in_pool": False,
+    }
 
 
 def add_inspiration(title, url="", excerpt="", scope="global", scope_ref=""):

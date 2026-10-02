@@ -1,29 +1,27 @@
 {
   "schema_version": 1,
   "stage": 3,
-  "current_task_state": "stage3_planning_amendment_implemented_awaiting_owner_review",
+  "current_task_state": "intelligence_v2_implemented_awaiting_owner_review",
   "completed_tasks": [
     "S1-01", "S1-02", "S1-03", "S1-04", "S1-05", "S1-06",
     "S2-01", "S2-02", "S2-03", "S2-04", "S2-05", "S2-06"
   ],
   "reopened_tasks": ["S3-01", "S3-02", "S3-03", "S3-04", "S3-05", "S3-06"],
   "scope_overlays": [
-    "docs/execution/SCOPE-STAGE2-INTEGRATIONS.md",
-    "docs/execution/acceptance-cases-stage2.json",
     "docs/execution/SCOPE-STAGE3-INTELLIGENCE.md",
     "docs/execution/acceptance-cases-stage3.json",
     "docs/execution/acceptance-cases-stage3-planning-amendment.json",
+    "docs/execution/acceptance-cases-intelligence-v2.json",
     "docs/execution/STAGE3-REQUIREMENT-MAP.md"
   ],
   "blocked_capabilities": [
-    {"capability": "mlx_inference", "state": "Optional", "reason": "qualify_llm requires mlx-lm backend; install mlx-lm and re-run"},
-    {"capability": "numerical_forecast", "state": "Stage 4", "reason": "AC25/AC34 not in this repair"},
-    {"capability": "lastfm_sparse_seed", "state": "Insufficient data", "reason": "Opal Season may return zero similar artists; use reference seeds"}
+    {"capability": "pymc_qualified_owner_domain", "state": "data-gated", "reason": "Sparse owner history; synthetic qualify_statistics only"},
+    {"capability": "meta_live_peer_media", "state": "environment-gated", "reason": "Requires Business Discovery token and peer handles"},
+    {"capability": "numerical_forecast", "state": "Stage 4", "reason": "AC25/AC34"}
   ],
   "test_reports": [
-    {"id": "stage3-repair-2026-10-02", "path": "docs/reports/2026-10-02-stage3-repair-handover.md", "results": {"suite": "see handover report"}},
-    {"id": "stage3-planning-amendment-2026-10-02", "path": "docs/reports/2026-10-02-stage3-planning-amendment.md", "results": {"command": "SOCIALS_MANAGER_LLM_DISABLED=1 .venv/bin/python manage.py test tests.test_stage3_planning_amendment tests.test_stage3_repair tests.test_stage3", "passed": 34}}
+    {"id": "intelligence-v2-2026-10-03", "path": "docs/reports/2026-10-03-intelligence-v2-handover.md", "results": {"passed": 23}}
   ],
-  "next_action": "Owner consolidated Stage 3 review (repair + ADR 0004 amendment); then Stage 4 gate",
-  "resume_note": "Planning relevance separated from evidence: tactics-v3, needs-v1, assessments, compose-v1, synthesis-v3, Ask planning_decision facts."
+  "next_action": "Owner consolidated Stage 3 review (ADR 0004 + ADR 0005); run qualify_statistics and qualify_llm on hardware",
+  "resume_note": "Unified pipeline: resolver, runners, peer media, decision context, claims, qualification criteria."
 }

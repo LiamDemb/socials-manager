@@ -78,6 +78,48 @@ class AdaptationProposal(models.Model):
         ordering = ["-created_at"]
 
 
+class AnalysisSpec(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.CharField(max_length=80, unique=True)
+    family = models.CharField(max_length=40)
+    version = models.CharField(max_length=40)
+    target_metric_id = models.CharField(max_length=80, blank=True, default="")
+    config = models.JSONField(default=dict)
+    runnable = models.BooleanField(default=False)
+    created_at = models.DateTimeField()
+
+
+class FitRun(models.Model):
+    STATUSES = [
+        ("ready", "ready"),
+        ("exploratory", "exploratory"),
+        ("qualified", "qualified"),
+        ("insufficient_data", "insufficient_data"),
+        ("blocked", "blocked"),
+        ("stale", "stale"),
+        ("descriptive_only", "descriptive_only"),
+        ("pending", "pending"),
+        ("failed", "failed"),
+    ]
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    spec = models.ForeignKey(AnalysisSpec, on_delete=models.PROTECT, related_name="runs")
+    cache_key = models.CharField(max_length=64, unique=True)
+    status = models.CharField(max_length=24, choices=STATUSES)
+    blocker_code = models.CharField(max_length=80, blank=True, default="")
+    lineage = models.JSONField(default=dict)
+    result = models.JSONField(default=dict)
+    created_at = models.DateTimeField()
+
+
+class CohortVersion(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    policy_version = models.CharField(max_length=40)
+    fingerprint = models.CharField(max_length=64, unique=True)
+    membership = models.JSONField(default=dict)
+    stale = models.BooleanField(default=False)
+    created_at = models.DateTimeField()
+
+
 class AskExchange(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     question = models.TextField()

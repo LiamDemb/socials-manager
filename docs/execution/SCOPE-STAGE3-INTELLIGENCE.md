@@ -2,6 +2,10 @@
 
 Supersedes deferred "local model TBD" gates in PROJECT-CONTEXT for synthesis, Ask and evidence-backed campaign drafts.
 
+## Intelligence pipeline v2 (3 Oct 2026, ADR 0005)
+
+Shared agenda, resolver, decision context, statistical runners, peer media collection. See `acceptance-cases-intelligence-v2.json` and `docs/reports/2026-10-03-intelligence-v2-handover.md`.
+
 ## Planning amendment (2 Oct 2026, ADR 0004)
 
 Tactic selection uses strategic roles, needs (`needs-v1`), dual assessments, and composition (`compose-v1`). Primary-outcome metric matching is **not** a selection gate. Evidence-backed labels require strict metric-scoped refs. See `acceptance-cases-stage3-planning-amendment.json`.

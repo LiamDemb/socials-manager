@@ -45,10 +45,14 @@ def pick_time_slot(day: date, campaign_type, timing_evidence: dict | None, tz_na
     fallback = True
     chosen_local = f"{day.isoformat()}T{DEFAULT_EVENING.strftime('%H:%M')}"
     feasible = [{"local": chosen_local, "score": 0}]
-    if timing_evidence and timing_evidence.get("preferred_hour"):
+    if timing_evidence and timing_evidence.get("preferred_hour") is not None and timing_evidence.get("refs"):
         hour = int(timing_evidence["preferred_hour"])
         chosen_local = f"{day.isoformat()}T{hour:02d}:00"
-        basis = "Own Reel history"
+        n = timing_evidence.get("sample_n") or (timing_evidence.get("refs") or [{}])[0].get("n")
+        lim = timing_evidence.get("limitation") or ""
+        basis = f"Timing evidence (n={n})" if n else "Timing evidence"
+        if lim:
+            basis = f"{basis}; {lim[:80]}"
         fallback = False
         feasible = [{"local": chosen_local, "window": timing_evidence.get("window", "18:00-20:00"), "score": 1}]
     cfg = instance.load()

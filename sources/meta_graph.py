@@ -199,3 +199,32 @@ def business_discovery(peer_username: str):
         "source": "business_discovery",
         "note": "Public profile fields only; no fabricated reach or conversion metrics.",
     }
+
+
+def business_discovery_media(peer_username: str, after: str | None = None, limit: int = 25):
+    """Paginated public media list for a peer account."""
+    cfg = inspect_configuration()
+    graph_token = _graph_token()
+    ig_id = cfg.get("instagram_business_account_id")
+    if not cfg.get("business_discovery_supported") or not graph_token:
+        return {"state": "blocked", "reason": "Business Discovery unavailable", "peer_username": peer_username}
+    media_fields = "id,caption,media_type,permalink,timestamp,like_count,comments_count"
+    paging = f",media.limit({limit}){{ {media_fields} }}"
+    if after:
+        paging = f",media.after({after}).limit({limit}){{ {media_fields} }}"
+    field = f"business_discovery.username({peer_username}){{username,media_count{paging}}}"
+    res = graph_get(ig_id, graph_token, {"fields": field})
+    if not res.ok:
+        err = (res.data or {}).get("error", {}) if isinstance(res.data, dict) else {}
+        return {"state": "error", "error": err.get("message", res.error)}
+    bd = (res.data or {}).get("business_discovery") or {}
+    media = bd.get("media") or {}
+    items = media.get("data") or []
+    cursors = (media.get("paging") or {}).get("cursors") or {}
+    return {
+        "state": "ok",
+        "peer_username": peer_username,
+        "media_count_reported": bd.get("media_count"),
+        "items": items,
+        "next_after": cursors.get("after"),
+    }

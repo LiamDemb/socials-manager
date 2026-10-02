@@ -10,13 +10,14 @@
   <h2 class="h3">Curated peers ({{ reviewed_count }} / 50)</h2>
   <p class="meta">Similarity is a discovery signal only. Confirm identity and relevance before promotion. Instagram handles are never inferred from names.</p>
   {% if peers %}
-  <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Name</th><th scope="col">Instagram</th><th scope="col">MusicBrainz</th><th scope="col">Collection</th></tr></thead>
+  <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Instagram</th><th scope="col">Coverage</th><th scope="col">Collection</th></tr></thead>
   <tbody>{% for p in peers %}<tr>
     <td>{{ p.label }}{% if p.review_state != "reviewed" %} <span class="badge tone-muted">{{ p.review_state }}</span>{% endif %}</td>
+    <td>{{ p.peer_role|default:"comparable" }}</td>
     <td>{% if p.instagram_username %}@{{ p.instagram_username }}{% else %}<span class="meta">Not set</span>{% endif %}</td>
-    <td>{% if p.musicbrainz_artist_id %}<a href="https://musicbrainz.org/artist/{{ p.musicbrainz_artist_id }}" rel="noopener noreferrer" target="_blank">MBID</a>{% else %}<span class="meta">None</span>{% endif %}</td>
+    <td>{% with cov=p.collection_health.coverage %}{% if cov.coverage_fraction %}{{ cov.collected_posts }}/{{ cov.reported_media_count }} ({{ cov.coverage_fraction }}){% else %}<span class="meta">{{ cov.collected_posts|default:0 }} posts</span>{% endif %}{% endwith %}</td>
     <td>{{ p.collection_health.state|default:"queued" }}</td>
-  </tr>{% endfor %}</tbody></table></div>
+  </tr>{% if p.media.exists %}<tr><td colspan="5"><details><summary>Collected posts ({{ p.media.count }})</summary><ul class="plain">{% for m in p.media.all|slice:":8" %}<li>{{ m.media_type }} · {{ m.caption|truncatewords:12 }}{% if m.permalink %} · <a href="{{ m.permalink }}" rel="noopener noreferrer" target="_blank">Permalink</a>{% endif %}</li>{% endfor %}</ul></details></td></tr>{% endif %}{% endfor %}</tbody></table></div>
   {% else %}
   <div class="empty"><h3>No curated peers yet</h3><p>Discover candidates below, then promote with a confirmed Instagram username.</p></div>
   {% endif %}

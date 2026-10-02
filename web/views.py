@@ -227,7 +227,7 @@ def placeholder(request, section):
             "web/peers.html",
             "peers",
             "Peers",
-            peers=PeerProfile.objects.order_by("label"),
+            peers=PeerProfile.objects.prefetch_related("media").order_by("label"),
             candidates=PeerCandidate.objects.filter(review_state="pending").order_by("-match_score", "name")[:50],
             reviewed_count=PeerProfile.objects.filter(review_state="reviewed").count(),
         )

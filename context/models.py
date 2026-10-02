@@ -26,6 +26,7 @@ class PeerCandidate(models.Model):
 
 class PeerProfile(models.Model):
     STATES = [(s, s) for s in ["pending", "reviewed", "rejected"]]
+    ROLES = [(s, s) for s in ["comparable", "aspirational", "reference_only", "excluded"]]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     handle = models.CharField(max_length=80, blank=True, default="")
     label = models.CharField(max_length=200)
@@ -33,6 +34,7 @@ class PeerProfile(models.Model):
     musicbrainz_artist_id = models.CharField(max_length=36, blank=True, default="")
     lastfm_name = models.CharField(max_length=200, blank=True, default="")
     review_state = models.CharField(max_length=12, choices=STATES, default="pending")
+    peer_role = models.CharField(max_length=20, choices=ROLES, default="comparable")
     notes = models.TextField(blank=True, default="")
     capability = models.JSONField(default=dict)
     collection_health = models.JSONField(default=dict)
@@ -68,6 +70,24 @@ class InspirationReference(models.Model):
     retrieved_at = models.DateTimeField()
     excerpt = models.TextField(blank=True, default="")
     influence = models.TextField(blank=True, default="")
+    in_analytical_pool = models.BooleanField(default=False)
+    collection_source = models.CharField(max_length=40, blank=True, default="manual")
+
+
+class PeerMedia(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    peer = models.ForeignKey(PeerProfile, on_delete=models.CASCADE, related_name="media")
+    external_id = models.CharField(max_length=80)
+    permalink = models.URLField(max_length=500, blank=True, default="")
+    caption = models.TextField(blank=True, default="")
+    media_type = models.CharField(max_length=40, blank=True, default="")
+    published_at = models.DateTimeField(null=True, blank=True)
+    snapshot = models.JSONField(default=dict)
+    collected_at = models.DateTimeField()
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["peer", "external_id"], name="unique_peer_media")]
+        ordering = ["-published_at"]
 
 
 class ReviewedContextItem(models.Model):

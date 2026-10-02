@@ -11,6 +11,10 @@ from .evidence import build_bundle_for_campaign
 from .evidence_slices import build_slices_for_tactics
 from .llm_adapter import generate_structured
 from .models import RecommendationRecord, SchedulingDecision
+from .agenda import build_analysis_agenda
+from .analysis import AnalysisResolver
+from .claims import build_claim_records
+from .decision_context import freeze_context
 from .needs import derive_campaign_needs
 from .planning import resolve_planning_context
 from .support import SUPPORT_CREATIVE, SUPPORT_SUPPORTED, support_label_display
@@ -44,6 +48,17 @@ def generate_evidence_activities(payload, operational_preview):
     needs = derive_campaign_needs(ctx, bundle, phase=phase)
     planning_notes.extend(needs.get("data_gaps") or [])
     planning_notes.extend(needs.get("needs_rationale") or [])
+
+    analysis_ctx = {**ctx, "dataset_hash": bundle.get("fingerprint"), "policy_versions": bundle.get("policy_versions") or {}}
+    agenda = build_analysis_agenda(ctx, needs)
+    resolver = AnalysisResolver()
+    agenda_results = resolver.resolve_agenda(agenda, analysis_ctx)
+    for ar in agenda_results:
+        if ar.get("status") == "blocked":
+            planning_notes.append(f"Analysis blocked ({ar.get('blocker_code')}): {ar.get('detail')}")
+        elif ar.get("status") == "insufficient_data":
+            planning_notes.append(f"Analysis insufficient: {ar.get('detail') or ar.get('request', {}).get('analysis_key')}")
+    decision = freeze_context(payload, ctx, bundle, needs, agenda_results)
 
     candidates, rejected = tactics.candidate_tactics(
         payload["type"],
@@ -88,7 +103,9 @@ def generate_evidence_activities(payload, operational_preview):
         support = evidence["support_label"]
         support_reason = evidence["support_reason"]
         day = schedule_hints[idx] if idx < len(schedule_hints) else days[min(len(days) - 1, idx * 2)]
-        schedule = scheduler.pick_time_slot(day, campaign_phase_type(payload["type"]), None, tz)
+        schedule = scheduler.pick_time_slot(
+            day, campaign_phase_type(payload["type"]), decision.get("timing_evidence"), tz
+        )
         evidence_snippets = [r.get("snippet") or r.get("metric_id", "") for r in (slice_bundle.get("observation_refs") or [])[:4]]
         finding_titles = [f.get("title", "") for f in (slice_bundle.get("finding_refs") or [])[:2]]
         brief_payload = {
@@ -140,6 +157,7 @@ def generate_evidence_activities(payload, operational_preview):
         basis = basis_for_activity(evidence, schedule.get("basis"))
         role_label = (strategic.get("roles") or ["support"])[0]
         title = f"{ctx['object_label'] or ctx['type_label']}: {tactic['formats'][0]} ({tactic['id'].replace('_', ' ')})"
+        claims = build_claim_records(strategic, evidence)
         activity = {
             "template_key": tactic["id"],
             "scheduling_json": json.dumps(schedule),
@@ -176,6 +194,8 @@ def generate_evidence_activities(payload, operational_preview):
                 "role": role_label,
                 "supports_outcome_id": strategic.get("supports_outcome_id"),
                 "composition_policy": composition_meta.get("composition_policy"),
+                "claims": claims,
+                "decision_context_fingerprint": decision.get("fingerprint"),
             },
         }
         out.append(activity)
@@ -184,6 +204,10 @@ def generate_evidence_activities(payload, operational_preview):
         planning_notes.append("No tactics selected after composition; operational checklist may still apply.")
 
     composition_meta["activities"] = [a["template_key"] for a in out]
+    composition_meta["decision_context"] = {
+        "fingerprint": decision.get("fingerprint"),
+        "agenda_results": [{"status": a.get("status"), "key": a.get("request", {}).get("analysis_key")} for a in agenda_results],
+    }
     rec = _store_preview_recommendation(None, payload, bundle, composition_meta)
     for a in out:
         a["recommendation_id"] = str(rec.pk)

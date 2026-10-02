@@ -71,6 +71,10 @@ An **Artist** (own, or reviewed peer) has **Promoted objects** (recording, relea
 
 macOS 15.7.4 on arm64. Python 3.14.4 (Homebrew) linking SQLite 3.53.0, which is at or above the documented WAL-reset fix (3.51.3). The system `sqlite3` CLI is 3.43.2, below the fix: do not use it against a live WAL database. Node v23.10.0 is a non-LTS release, used only for reference suites; the browser tests use Python Playwright with installed Chrome, so no Node is needed. Runtime dependencies (Django 5.2.17, asgiref, sqlparse, waitress) are hash-pinned and audited in `docs/dependencies.json`; stack decisions are in `docs/adr/0001-stack-storage-access.md`.
 
+## Stage 3 intelligence pipeline (ADR 0005)
+
+Shared analysis agenda, resolver, decision context, and statistical runners feed the existing compose-v1 planner. See `docs/adr/0005-unified-intelligence-pipeline.md` and `docs/reports/2026-10-03-intelligence-v2-handover.md`.
+
 ## Stage 3 planning (ADR 0004)
 
 Tactic **selection** uses strategic roles, campaign needs (`needs-v1`), and composition (`compose-v1`); observable metrics need not match the primary outcome. **Evidence** and **outcome progress** remain strict on `metric_id`. See `docs/adr/0004-planning-relevance-vs-evidence.md`.

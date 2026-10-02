@@ -1,0 +1,12 @@
+{
+  "stage": 3,
+  "extension": "intelligence-v2",
+  "cases": [
+    {"id": "IV01", "title": "Resolver parity and cache lineage", "expected": "Policy version change alters cache key"},
+    {"id": "IV02", "title": "Peer collection audit", "expected": "Pagination path documented; posts browsable"},
+    {"id": "IV03", "title": "Failure semantics", "expected": "blocked != insufficient_data"},
+    {"id": "IV04", "title": "Claims validation", "expected": "Metric and numeric mismatch rejected"},
+    {"id": "IV05", "title": "Decision context in preview", "expected": "fingerprint on provenance"},
+    {"id": "IV06", "title": "Qualification commands", "expected": "Frozen criteria; separate from mocked tests"}
+  ]
+}

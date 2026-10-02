@@ -29,6 +29,9 @@ def answer_question(question: str, scope: dict | None = None):
     scope = scope or {}
     safe_question = sanitize_retrieved_text(question, 2000)
     context = retrieve_for_question(safe_question, scope)
+    resolver_notes = []
+    if any(w in safe_question.lower() for w in ("better", "compare", "contrast")):
+        resolver_notes.append("Ambiguous comparison may need clarification before analysis runs.")
     allowed = {f["evidence_id"] for f in context["facts"] + context.get("activities", [])}
     payload = {
         "question": safe_question,
@@ -38,7 +41,7 @@ def answer_question(question: str, scope: dict | None = None):
             "Separate observed facts from interpretation."
         ),
         "facts": _facts_for_llm(safe_question, context["facts"] + context.get("activities", [])),
-        "gaps": context["gaps"],
+        "gaps": list(context["gaps"]) + resolver_notes,
         "facts_total": context["basis_count"],
         "truncated": context.get("truncated"),
     }
