@@ -1,0 +1,12 @@
+# Browser tests only. Not installed in the runtime environment.
+# Hashes are for macOS arm64 / CPython 3.14 wheels. Uses the installed Google Chrome channel;
+# do not run `playwright install` (no browser download is approved).
+-r requirements.txt
+greenlet==3.5.6 \
+    --hash=sha256:8cddea1b8339451c2fb3388e138347b6126744f33b611bdb55b7357361cfef46
+playwright==1.63.0 \
+    --hash=sha256:fd1aa00631d44d55e56e0975bf3f3f285fac4a9fd2813183f0c12a488f1a1b24
+pyee==13.0.1 \
+    --hash=sha256:af2f8fede4171ef667dfded53f96e2ed0d6e6bd7ee3bb46437f77e3b57689228
+typing_extensions==4.16.0 \
+    --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8
