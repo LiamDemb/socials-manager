@@ -66,6 +66,13 @@ SPOTIFY_CAPABILITY = {
 }
 
 
+def refresh_instagram_source():
+    """Live Meta/Instagram probe; updates stored capability for the Sources UI."""
+    from . import instagram
+
+    return instagram.ensure_instagram_source(Source, SourcePolicyVersion)
+
+
 def ensure_spotify_source():
     source, created = Source.objects.get_or_create(
         provider=S4A,

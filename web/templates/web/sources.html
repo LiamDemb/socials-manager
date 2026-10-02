@@ -45,7 +45,34 @@
 <section class="section">
   <div class="section-head"><h2>Other sources</h2></div>
   <div class="card-grid">
-    <article class="card"><h3>Instagram</h3><span class="badge tone-muted">Not set up</span><p class="meta">Needs the band's own professional account and an owner-authorised Meta app. Instagram follower outcomes show Needs source until then.</p></article>
+    <article class="card">
+      <h3>Instagram</h3>
+      {% with cap=instagram.capability %}
+      {% if cap.live_integration == "Passed" %}
+      <span class="badge tone-good">Connected</span>
+      <dl class="facts compact">
+        <div><dt>Handle</dt><dd>{{ cap.account }}</dd></div>
+        {% if cap.profile.account_type %}<div><dt>Account type</dt><dd>{{ cap.profile.account_type|humanise }}</dd></div>{% endif %}
+        {% if cap.own_account.account_id %}<div><dt>Instagram ID</dt><dd class="wrap">{{ cap.own_account.account_id }}</dd></div>{% endif %}
+        <div><dt>Auth route</dt><dd>{% if cap.auth_route == "instagram_login_basic" %}Instagram Login (basic profile){% elif cap.auth_route == "facebook_login_graph" %}Facebook Login (Graph API){% else %}{{ cap.auth_route|humanise }}{% endif %}</dd></div>
+        <div><dt>API check</dt><dd><span class="badge tone-good">Working</span> verified {{ cap.checked_at|local }}</dd></div>
+        <div><dt>Peer discovery</dt><dd>{% if cap.business_discovery_supported %}<span class="badge tone-good">Available</span>{% else %}<span class="badge tone-warn">Not configured</span> — link a Facebook Page and Page token (<code>docs/META-SETUP.md</code>).{% endif %}</dd></div>
+        {% if cap.own_account.unavailable_fields %}
+        <div><dt>Not on this route</dt><dd class="meta">{{ cap.own_account.unavailable_fields|join:", " }} (needs Graph Page route for full performance metrics)</dd></div>
+        {% endif %}
+      </dl>
+      {% elif cap.live_integration == "Failed" %}
+      <span class="badge tone-bad">Connection failed</span>
+      <p class="meta">Token or API error. Check <code>.env</code> tokens and re-authorise in the Meta developer console.</p>
+      {% if cap.detail %}<p class="meta">{{ cap.detail }}</p>{% endif %}
+      {% if cap.own_account.note %}<p class="meta">{{ cap.own_account.note }}</p>{% endif %}
+      {% else %}
+      <span class="badge tone-muted">Not set up</span>
+      <p class="meta">Needs the band's own professional account and an owner-authorised Meta app (<code>INSTAGRAM_ACCESS_TOKEN</code> or <code>META_ACCESS_TOKEN</code> in <code>.env</code>). Instagram follower outcomes show Needs source until then.</p>
+      {% if cap.detail %}<p class="meta">{{ cap.detail }}</p>{% endif %}
+      {% endif %}
+      {% endwith %}
+    </article>
     <article class="card"><h3>Pre-saves</h3><span class="badge tone-muted">Not set up</span><p class="meta">No pre-save provider is connected. Artist saves and playlist adds are not pre-saves.</p></article>
     <article class="card"><h3>Ticket sales</h3><span class="badge tone-muted">Not set up</span><p class="meta">Needs an event-scoped sales report from your ticketing provider.</p></article>
   </div>

@@ -143,8 +143,9 @@ def sources_page(request):
     spotify = sources.ensure_spotify_source()
     policy = sources.current_policy(spotify)
     batches = ImportBatch.objects.select_related("mapped_entity", "raw_file").order_by("-created_at")[:50]
+    instagram = sources.refresh_instagram_source()
     return page(request, "web/sources.html", "sources", "Sources", spotify=spotify, policy=policy, batches=batches,
-                coverage=p.coverage_rows(), purposes=list(policy.purposes.items()))
+                coverage=p.coverage_rows(), purposes=list(policy.purposes.items()), instagram=instagram)
 
 
 @require_GET

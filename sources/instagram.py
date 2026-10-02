@@ -12,9 +12,11 @@ def probe_live():
     cfg = meta_graph.inspect_configuration()
     own = meta_graph.fetch_own_account()
     live = "Passed" if own.get("state") == "ok" else ("Blocked" if own.get("state") == "blocked" else "Failed")
+    username = (cfg.get("instagram_username") or (own.get("fields") or {}).get("username") or HANDLE).strip()
+    profile = dict(own.get("fields") or {}) if own.get("state") == "ok" else {}
     return {
-        "handle": HANDLE,
-        "account": f"@{cfg.get('instagram_username') or HANDLE}",
+        "handle": username,
+        "account": f"@{username}",
         "route": IG_ROUTE,
         "live_integration": live,
         "detail": cfg.get("detail"),
@@ -22,10 +24,13 @@ def probe_live():
         "auth_route": cfg.get("auth_route"),
         "business_discovery_supported": cfg.get("business_discovery_supported"),
         "instagram_login_only_warning": cfg.get("instagram_login_only_warning"),
+        "profile": profile,
         "own_account": {
             "state": own.get("state"),
+            "account_id": own.get("account_id"),
             "fields_available": list((own.get("fields") or {}).keys()),
             "unavailable_fields": own.get("unavailable_fields") or [],
+            "note": own.get("note") or own.get("reason") or "",
         },
         "metrics": {
             "account.followers": "ok" if own.get("state") == "ok" and "followers_count" in (own.get("fields") or {}) else "unsupported",

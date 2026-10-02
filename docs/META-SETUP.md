@@ -32,9 +32,10 @@ python manage.py probe_meta --peer someconfirmedpeer
    - `pages_read_engagement`
    - `pages_show_list`
 5. Store in `.env` (never commit):
-   - `META_ACCESS_TOKEN=` Page or System User token
+   - `META_ACCESS_TOKEN=` Facebook Graph user or Page token (used for `me/accounts`, own-account metrics, Business Discovery)
+   - `INSTAGRAM_ACCESS_TOKEN=` optional Instagram Login token for `graph.instagram.com` basic profile only
    - `META_APP_ID=`
-   - Keep `INSTAGRAM_ACCESS_TOKEN` only if you still use the basic route for smoke tests
+   - Both tokens can be set at once; Graph calls always use `META_ACCESS_TOKEN`, not the Instagram token.
 6. Re-run `probe_meta`. Expect `business_discovery_supported: true` and `facebook_page_id` set.
 
 ## Peer collection in the app

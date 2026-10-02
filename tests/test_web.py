@@ -121,6 +121,32 @@ class WebFlow(TestCase):
         self.assertEqual(res.status_code, 200, res.content)
         self.assertContains(self.client.get("/settings"), "ArtistFixture000000001")
 
+    def test_sources_instagram_shows_connected_when_api_ok(self):
+        from unittest import mock
+
+        from sources.models import Source
+
+        cap = {
+            "live_integration": "Passed",
+            "account": "@opalseason_",
+            "auth_route": "instagram_login_basic",
+            "checked_at": clock.now().isoformat(),
+            "business_discovery_supported": False,
+            "profile": {"username": "opalseason_", "account_type": "MEDIA_CREATOR"},
+            "own_account": {
+                "account_id": "17841480673422463",
+                "unavailable_fields": ["followers_count", "media_count", "insights"],
+            },
+        }
+        with mock.patch("sources.instagram.probe_live", return_value=cap):
+            res = self.client.get("/sources")
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Connected")
+        self.assertContains(res, "@opalseason_")
+        self.assertContains(res, "Working")
+        source = Source.objects.get(provider="instagram", route="graph_api")
+        self.assertEqual(source.capability["live_integration"], "Passed")
+
 
 class Boundary(TestCase):
     def setUp(self):
