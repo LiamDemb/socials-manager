@@ -319,13 +319,24 @@ def settings_update(request, body, key):
 
 @api
 def peer_discover_lastfm(request, body, key):
-    from context.services import discover_lastfm_similar
+    from context.services import discover_lastfm_similar, discovery_seed_artist
 
-    artist = (body.get("artist") or "Opal Season").strip()
+    artist = (body.get("artist") or discovery_seed_artist()).strip()
     limit = min(int(body.get("limit") or 30), 50)
 
     def run():
-        return discover_lastfm_similar(artist, limit=limit)
+        result = discover_lastfm_similar(artist, limit=limit)
+        warnings = []
+        if result.get("state") == "error":
+            warnings.append({"message": result.get("error") or "Last.fm discovery failed."})
+        elif not result.get("similar"):
+            warnings.append({"message": f"No similar artists returned for “{artist}”. Try another seed artist."})
+        elif result.get("candidates_created", 0) == 0:
+            warnings.append({"message": "No new candidates (they may already be listed)."})
+        payload = {**result, "redirect": "/peers"}
+        if warnings:
+            payload["warnings"] = warnings
+        return payload
 
     return idempotent(key, "peer.discover_lastfm", run)
 
@@ -340,6 +351,7 @@ def peer_promote(request, body, key):
             instagram_username=body.get("instagram_username") or "",
             musicbrainz_mbid=body.get("musicbrainz_mbid") or "",
             notes=body.get("notes") or "",
+            peer_role=body.get("peer_role") or "unresolved",
         )
         return {"peer_id": str(peer.pk), "redirect": "/peers"}
 
@@ -355,6 +367,104 @@ def peer_reject(request, body, key):
         return {"redirect": "/peers"}
 
     return idempotent(key, "peer.reject", run)
+
+
+@api
+def peer_create(request, body, key):
+    from context.services import create_manual_peer
+
+    def run():
+        peer = create_manual_peer(
+            body.get("label") or "",
+            instagram_username=body.get("instagram_username") or "",
+            peer_role=body.get("peer_role") or "unresolved",
+            notes=body.get("notes") or "",
+        )
+        return {"peer_id": str(peer.pk), "redirect": "/peers"}
+
+    return idempotent(key, "peer.create", run)
+
+
+@api
+def peer_update(request, body, key):
+    from context.services import update_peer_profile
+
+    def run():
+        peer = update_peer_profile(
+            body["peer_id"],
+            instagram_username=body.get("instagram_username"),
+            peer_role=body.get("peer_role"),
+            label=body.get("label"),
+            collection_paused=body.get("collection_paused"),
+        )
+        return {"peer_id": str(peer.pk), "redirect": "/peers"}
+
+    return idempotent(key, "peer.update", run)
+
+
+@api
+def inspiration_save(request, body, key):
+    from context.inspiration_services import save_peer_media
+
+    def run():
+        ref = save_peer_media(body["peer_media_id"], note=body.get("note") or "")
+        return {"reference_id": str(ref.pk), "redirect": body.get("redirect") or "/inspiration"}
+
+    return idempotent(key, "inspiration.save", run)
+
+
+@api
+def inspiration_unsave(request, body, key):
+    from context.inspiration_services import unsave_reference
+
+    def run():
+        unsave_reference(body["reference_id"])
+        return {"redirect": body.get("redirect") or "/inspiration"}
+
+    return idempotent(key, "inspiration.unsave", run)
+
+
+@api
+def inspiration_manual(request, body, key):
+    from context.inspiration_services import add_manual_reference
+
+    def run():
+        ref = add_manual_reference(
+            body.get("title") or "",
+            body.get("url") or "",
+            note=body.get("note") or "",
+            scope=body.get("scope") or "global",
+            scope_ref=body.get("scope_ref") or "",
+        )
+        return {"reference_id": str(ref.pk), "redirect": body.get("redirect") or "/inspiration"}
+
+    return idempotent(key, "inspiration.manual", run)
+
+
+@api
+def activity_attach_reference(request, body, key, activity_id):
+    from context.inspiration_services import attach_reference, save_peer_media
+
+    def run():
+        ref_id = body.get("reference_id")
+        if body.get("peer_media_id") and not ref_id:
+            ref = save_peer_media(body["peer_media_id"], note=body.get("note") or "")
+            ref_id = str(ref.pk)
+        attach_reference(activity_id, ref_id, origin=body.get("origin") or "owner_attach", note=body.get("note") or "")
+        return {"redirect": f"/ui/activity/{activity_id}"}
+
+    return idempotent(key, f"activity.attach_ref.{activity_id}", run)
+
+
+@api
+def activity_detach_reference(request, body, key, activity_id):
+    from context.inspiration_services import detach_reference
+
+    def run():
+        detach_reference(activity_id, body["reference_id"])
+        return {"redirect": f"/ui/activity/{activity_id}"}
+
+    return idempotent(key, f"activity.detach_ref.{activity_id}", run)
 
 
 @api

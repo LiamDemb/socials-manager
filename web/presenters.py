@@ -103,6 +103,8 @@ def outcome_rows(campaigns_qs=None):
 
 
 def activity_view(activity, now=None):
+    from intelligence.reference_match import attached_cards_for_activity
+
     state = display_state(activity, now)
     tz = ZoneInfo(activity.timezone)
     local_day = rules.planned_local_date(activity.planned_at_utc, activity.all_day_date, activity.timezone)
@@ -110,6 +112,7 @@ def activity_view(activity, now=None):
         "a": activity, "state": state, "tone": TONE.get(state, "neutral"), "day": local_day,
         "time": activity.planned_at_utc.astimezone(tz).strftime("%H:%M") if activity.planned_at_utc else None,
         "actual": activity.actual_at_utc.astimezone(tz) if activity.actual_at_utc else None,
+        "references": attached_cards_for_activity(activity),
     }
 
 

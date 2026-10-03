@@ -378,6 +378,10 @@ def _create_campaign(payload):
             detail["edited_by_owner"] = True
         activity = Activity.objects.create(campaign=campaign, origin=origin, origin_detail=detail, created_at=clock.now(), **fields)
         ActivityOutcome.objects.create(activity=activity, outcome_version=primary)
+        if item.get("reference_ids"):
+            from context.inspiration_services import persist_preview_attachments
+
+            persist_preview_attachments(activity, item.get("reference_ids"))
         if item.get("scheduling"):
             from intelligence.synthesis import persist_scheduling
 

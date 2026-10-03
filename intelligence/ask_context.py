@@ -172,6 +172,22 @@ def build_ask_context():
             _fact("inspiration", f"Inspiration: {ref.title}. {sanitize_retrieved_text(ref.excerpt, 180)}", "inspiration", ref.pk)
         )
 
+    from context.library import explore_media_queryset
+    from context.media_labels import display_media_type as _fmt
+
+    for media in explore_media_queryset()[:8]:
+        excerpt = sanitize_retrieved_text(media.caption, 120)
+        link = media.permalink or ""
+        facts.append(
+            _fact(
+                "peer_post",
+                f"Peer post @{media.peer.instagram_username} ({_fmt(media.media_type)}): {excerpt}"
+                + (f" Source: {link}" if link else ""),
+                "peer_media",
+                media.pk,
+            )
+        )
+
     facts = facts[:MAX_FACTS]
     return {
         "facts": facts,

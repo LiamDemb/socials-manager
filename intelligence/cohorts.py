@@ -5,25 +5,35 @@ import json
 from core import clock
 
 from context.models import InspirationReference, PeerMedia, PeerProfile
+from context.roles import ANALYSIS_COMPARABLE_ROLES
 
-COHORT_POLICY_VERSION = "cohort-v1"
+COHORT_POLICY_VERSION = "cohort-v2"
 
 
 def build_comparable_cohort() -> dict:
     peers = list(
-        PeerProfile.objects.filter(review_state="reviewed", peer_role="comparable").values_list("pk", flat=True)
+        PeerProfile.objects.filter(review_state="reviewed", peer_role__in=ANALYSIS_COMPARABLE_ROLES).values_list(
+            "pk", flat=True
+        )
     )
     media_ids = list(
         PeerMedia.objects.filter(peer_id__in=peers).values_list("external_id", flat=True)[:500]
     )
-    manual_inspiration = list(
-        InspirationReference.objects.filter(in_analytical_pool=False).values_list("pk", flat=True)[:20]
+    manual_excluded = list(
+        InspirationReference.objects.filter(origin_type="manual", in_analytical_pool=False).values_list("pk", flat=True)[
+            :20
+        ]
+    )
+    pool_bookmarks = list(
+        InspirationReference.objects.filter(in_analytical_pool=True, collection_source="peer_business_discovery")
+        .values_list("pk", flat=True)[:50]
     )
     body = {
         "policy": COHORT_POLICY_VERSION,
         "peers": [str(p) for p in peers],
         "media_external_ids": media_ids,
-        "excluded_manual_inspiration": [str(i) for i in manual_inspiration],
+        "excluded_manual_inspiration": [str(i) for i in manual_excluded],
+        "analytical_pool_bookmarks": [str(i) for i in pool_bookmarks],
     }
     fp = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()[:32]
     from .models import CohortVersion

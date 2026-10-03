@@ -221,6 +221,7 @@ def settings_page(request):
 def placeholder(request, section):
     if section == "peers":
         from context.models import PeerCandidate, PeerProfile
+        from context.services import discovery_seed_artist
 
         return page(
             request,
@@ -230,12 +231,51 @@ def placeholder(request, section):
             peers=PeerProfile.objects.prefetch_related("media").order_by("label"),
             candidates=PeerCandidate.objects.filter(review_state="pending").order_by("-match_score", "name")[:50],
             reviewed_count=PeerProfile.objects.filter(review_state="reviewed").count(),
+            discovery_seed=discovery_seed_artist(),
+            peer_roles=[c[0] for c in PeerProfile.ROLES],
         )
     if section == "inspiration":
-        from context.models import InspirationReference
+        from context.library import explore_media_queryset, library_state_summary, media_card, paginate, saved_references_queryset
+        from context.library import reference_card
+        from context.models import PeerProfile
 
-        refs = InspirationReference.objects.order_by("-retrieved_at")[:50]
-        return page(request, "web/inspiration.html", "inspiration", "Inspiration", refs=refs)
+        tab = request.GET.get("tab", "explore")
+        if tab not in ("explore", "saved"):
+            tab = "explore"
+        page_num = max(1, int(request.GET.get("page") or 1))
+        peer_id = request.GET.get("peer") or ""
+        q = (request.GET.get("q") or "").strip()
+        if tab == "saved":
+            qs = saved_references_queryset(peer_id=peer_id or None, q=q)
+            page_obj, num_pages, total = paginate(qs, page_num)
+            cards = [reference_card(r) for r in page_obj]
+        else:
+            qs = explore_media_queryset(peer_id=peer_id or None, q=q)
+            page_obj, num_pages, total = paginate(qs, page_num)
+            cards = []
+            for m in page_obj:
+                saved_id = None
+                if getattr(m, "is_saved", False):
+                    from context.models import InspirationReference
+
+                    br = InspirationReference.objects.filter(peer_media=m, is_bookmark=True).first()
+                    saved_id = str(br.pk) if br else None
+                cards.append(media_card(m, saved_ref_id=saved_id, is_saved=getattr(m, "is_saved", False)))
+        return page(
+            request,
+            "web/inspiration.html",
+            "inspiration",
+            "Inspiration",
+            tab=tab,
+            cards=cards,
+            page_obj=page_obj,
+            num_pages=num_pages,
+            total=total,
+            peers=PeerProfile.objects.filter(review_state="reviewed").order_by("label"),
+            summary=library_state_summary(),
+            q=q,
+            peer_filter=peer_id,
+        )
     if section == "ask":
         from intelligence.llm_adapter import health
         from intelligence.models import AskExchange
@@ -279,6 +319,31 @@ def ui_activity_why(request, activity_id):
     outcomes = [link.outcome_version for link in a.outcome_links.select_related("outcome_version__metric", "outcome_version__scope_entity")]
     sources_for = Source.objects.filter(provider__in={ov.metric.provider for ov in outcomes})
     return fragment(request, "web/dialogs/why.html", v=p.activity_view(a), outcomes=outcomes, sources_for=sources_for)
+
+
+@require_GET
+def ui_library(request):
+    from context.library import explore_media_queryset, media_card, paginate
+    from context.models import PeerProfile
+
+    activity_id = request.GET.get("activity") or ""
+    peer_id = request.GET.get("peer") or ""
+    q = (request.GET.get("q") or "").strip()
+    page_num = max(1, int(request.GET.get("page") or 1))
+    qs = explore_media_queryset(peer_id=peer_id or None, q=q)
+    page_obj, num_pages, total = paginate(qs, page_num, per_page=12)
+    cards = [media_card(m, is_saved=getattr(m, "is_saved", False)) for m in page_obj]
+    return fragment(
+        request,
+        "web/dialogs/library.html",
+        cards=cards,
+        activity_id=activity_id,
+        peers=PeerProfile.objects.filter(review_state="reviewed").order_by("label"),
+        page_obj=page_obj,
+        num_pages=num_pages,
+        q=q,
+        peer_filter=peer_id,
+    )
 
 
 @require_GET

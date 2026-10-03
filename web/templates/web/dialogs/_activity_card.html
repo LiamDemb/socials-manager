@@ -20,4 +20,12 @@
   {% elif item.purpose %}<details><summary>Purpose</summary><textarea data-field="purpose" rows="2" maxlength="2000" aria-label="Purpose">{{ item.purpose }}</textarea></details>{% endif %}
   {% if item.scheduling_json %}<input type="hidden" data-field="scheduling" value="{{ item.scheduling_json|escape }}">{% endif %}
   {% if item.evidence_ids %}<input type="hidden" data-field="evidence_ids" value="{{ item.evidence_ids|join:',' }}">{% endif %}
+  {% if item.reference_suggestions %}
+  <details class="ref-suggestions"><summary>Suggested examples (not attached)</summary>
+    <ul class="plain">{% for s in item.reference_suggestions %}
+      <li class="meta">{{ s.peer_label }} · {{ s.media_type_display }} — {{ s.match_reason }}{% if s.permalink %} · <a href="{{ s.permalink }}" target="_blank" rel="noopener">source</a>{% endif %}</li>
+    {% endfor %}</ul>
+    <p class="meta">Save or attach from <a href="/inspiration">Inspiration</a> after the campaign is created.</p>
+  </details>
+  {% endif %}
 </article>

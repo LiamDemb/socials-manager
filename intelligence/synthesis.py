@@ -49,7 +49,16 @@ def generate_evidence_activities(payload, operational_preview):
     planning_notes.extend(needs.get("data_gaps") or [])
     planning_notes.extend(needs.get("needs_rationale") or [])
 
-    analysis_ctx = {**ctx, "dataset_hash": bundle.get("fingerprint"), "policy_versions": bundle.get("policy_versions") or {}}
+    from intelligence.peer_dataset import enrich_analysis_ctx
+
+    analysis_ctx = enrich_analysis_ctx(
+        {**ctx, "dataset_hash": bundle.get("fingerprint"), "policy_versions": bundle.get("policy_versions") or {}}
+    )
+    peer_ds = analysis_ctx.get("dataset_meta") or {}
+    if peer_ds.get("post_count", 0) == 0 and peer_ds.get("peer_ids"):
+        planning_notes.append(
+            "Peer posts are collected but lack public metrics at capture for comparable analysis, or cohort is empty."
+        )
     agenda = build_analysis_agenda(ctx, needs)
     resolver = AnalysisResolver()
     agenda_results = resolver.resolve_agenda(agenda, analysis_ctx)
@@ -158,6 +167,17 @@ def generate_evidence_activities(payload, operational_preview):
         role_label = (strategic.get("roles") or ["support"])[0]
         title = f"{ctx['object_label'] or ctx['type_label']}: {tactic['formats'][0]} ({tactic['id'].replace('_', ' ')})"
         claims = build_claim_records(strategic, evidence)
+        from intelligence.reference_match import suggest_for_preview_activity
+
+        ref_suggestions = suggest_for_preview_activity(
+            {
+                "channel": tactic["channels"][0],
+                "format": tactic["formats"][0],
+                "campaign_type": payload["type"],
+                "provenance": {"role": role_label},
+            },
+            limit=2,
+        )
         activity = {
             "template_key": tactic["id"],
             "scheduling_json": json.dumps(schedule),
@@ -196,7 +216,10 @@ def generate_evidence_activities(payload, operational_preview):
                 "composition_policy": composition_meta.get("composition_policy"),
                 "claims": claims,
                 "decision_context_fingerprint": decision.get("fingerprint"),
+                "reference_suggestions": ref_suggestions,
             },
+            "reference_suggestions": ref_suggestions,
+            "reference_ids": [],
         }
         out.append(activity)
 

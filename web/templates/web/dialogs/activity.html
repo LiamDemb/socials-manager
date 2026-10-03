@@ -9,6 +9,25 @@
   {% if v.a.review_flag %}<div class="alert tone-warn" role="status">{{ v.a.review_flag }}. Check the date; nothing was moved.</div>{% endif %}
 
   <section class="group">
+    <h3 class="group-title">References</h3>
+    {% if references %}
+    <ul class="plain">{% for r in references %}
+      <li class="card">
+        <p><strong>{{ r.title|default:r.peer_label }}</strong> · {{ r.media_type_display|default:"Reference" }}</p>
+        <p class="meta">{{ r.match_reason|default:"Attached example" }}{% if r.metrics_note %} · {{ r.metrics_note }}{% endif %}</p>
+        {% if r.permalink or r.url %}<p><a href="{{ r.permalink|default:r.url }}" rel="noopener noreferrer" target="_blank">Source</a></p>{% endif %}
+        <form data-api="/api/activities/{{ v.a.pk }}/references/detach" data-after="reload" class="inline">
+          <input type="hidden" name="reference_id" value="{{ r.reference_id }}">
+          <button class="button subtle small" type="submit">Remove attachment</button>
+          <p class="form-error" role="alert"></p>
+        </form>
+      </li>{% endfor %}</ul>
+    {% else %}
+    <p class="meta">No examples attached. <a href="/ui/library?activity={{ v.a.pk }}" data-dialog-push>Find examples</a></p>
+    {% endif %}
+  </section>
+
+  <section class="group">
     <h3 class="group-title">Making</h3>
     <dl class="facts compact">
       {% if v.a.channel %}<div><dt>Channel</dt><dd>{{ v.a.channel|channel_label }}{% if v.a.format %} · {{ v.a.format }}{% endif %}</dd></div>{% endif %}

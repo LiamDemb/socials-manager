@@ -1,0 +1,33 @@
+{% load be %}<div class="frame" data-frame data-title="Reference library">
+{% include "web/dialogs/_head.html" with heading="Find examples" eyebrow="Inspiration" %}
+<div class="modal-body library-body" tabindex="0">
+  <form class="row inline-form" method="get" action="/ui/library" data-dialog-push>
+    {% if activity_id %}<input type="hidden" name="activity" value="{{ activity_id }}">{% endif %}
+    <label>Search <input name="q" value="{{ q }}"></label>
+    <label>Peer <select name="peer"><option value="">All</option>{% for p in peers %}<option value="{{ p.pk }}"{% if peer_filter == p.pk|stringformat:"s" %} selected{% endif %}>{{ p.label }}</option>{% endfor %}</select></label>
+    <button class="button small" type="submit">Filter</button>
+  </form>
+  {% if cards %}
+  <ul class="plain">{% for c in cards %}
+    <li class="card">
+      <p class="meta">{{ c.peer_label }} · {{ c.media_type_display }}</p>
+      <p class="wrap">{{ c.caption_excerpt|default:"No caption." }}</p>
+      {% if activity_id %}
+      <form data-api="/api/activities/{{ activity_id }}/references/attach" data-after="reload" class="inline">
+        <input type="hidden" name="peer_media_id" value="{{ c.id }}">
+        <button class="button small" type="submit">Attach</button>
+        <p class="form-error" role="alert"></p>
+      </form>
+      {% else %}
+      <form data-api="/api/inspiration/save" data-after="reload" class="inline">
+        <input type="hidden" name="peer_media_id" value="{{ c.id }}">
+        <button class="button small" type="submit">Save</button>
+        <p class="form-error" role="alert"></p>
+      </form>
+      {% endif %}
+    </li>{% endfor %}</ul>
+  {% else %}
+  <p class="meta">No collected posts match. Collect peer media first or adjust filters.</p>
+  {% endif %}
+</div>
+</div>

@@ -1,6 +1,7 @@
 {% extends "web/base.html" %}
 {% block actions %}
 <form data-api="/api/peers/discover" data-after="reload" class="inline">
+  <input type="hidden" name="artist" value="{{ discovery_seed }}">
   <button class="button" type="submit">Discover similar (Last.fm)</button>
   <p class="form-error" role="alert"></p>
 </form>
@@ -8,19 +9,42 @@
 {% block content %}
 <section class="section">
   <h2 class="h3">Curated peers ({{ reviewed_count }} / 50)</h2>
-  <p class="meta">Similarity is a discovery signal only. Confirm identity and relevance before promotion. Instagram handles are never inferred from names.</p>
+  <p class="meta">Discovery seed: <strong>{{ discovery_seed }}</strong>. Similarity is a signal only. Instagram handles are never inferred from names.</p>
   {% if peers %}
-  <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Instagram</th><th scope="col">Coverage</th><th scope="col">Collection</th></tr></thead>
+  <div class="table-wrap"><table class="data"><thead><tr><th scope="col">Name</th><th scope="col">Role</th><th scope="col">Instagram</th><th scope="col">Coverage</th><th scope="col">Collection</th><th scope="col">Actions</th></tr></thead>
   <tbody>{% for p in peers %}<tr>
     <td>{{ p.label }}{% if p.review_state != "reviewed" %} <span class="badge tone-muted">{{ p.review_state }}</span>{% endif %}</td>
-    <td>{{ p.peer_role|default:"comparable" }}</td>
+    <td>{{ p.peer_role|default:"unresolved" }}</td>
     <td>{% if p.instagram_username %}@{{ p.instagram_username }}{% else %}<span class="meta">Not set</span>{% endif %}</td>
     <td>{% with cov=p.collection_health.coverage %}{% if cov.coverage_fraction %}{{ cov.collected_posts }}/{{ cov.reported_media_count }} ({{ cov.coverage_fraction }}){% else %}<span class="meta">{{ cov.collected_posts|default:0 }} posts</span>{% endif %}{% endwith %}</td>
-    <td>{{ p.collection_health.state|default:"queued" }}</td>
-  </tr>{% if p.media.exists %}<tr><td colspan="5"><details><summary>Collected posts ({{ p.media.count }})</summary><ul class="plain">{% for m in p.media.all|slice:":8" %}<li>{{ m.media_type }} · {{ m.caption|truncatewords:12 }}{% if m.permalink %} · <a href="{{ m.permalink }}" rel="noopener noreferrer" target="_blank">Permalink</a>{% endif %}</li>{% endfor %}</ul></details></td></tr>{% endif %}{% endfor %}</tbody></table></div>
+    <td>{{ p.collection_health.state|default:"queued" }}{% if p.collection_paused %} <span class="meta">paused</span>{% endif %}</td>
+    <td>
+      <a class="button subtle small" href="/inspiration?tab=explore&amp;peer={{ p.pk }}">View all posts</a>
+      <details><summary>Edit</summary>
+        <form data-api="/api/peers/update" data-after="reload" class="stack inline-form">
+          <input type="hidden" name="peer_id" value="{{ p.pk }}">
+          <label>Instagram @ <input name="instagram_username" value="{{ p.instagram_username }}" maxlength="80"></label>
+          <label>Role <select name="peer_role">{% for r in peer_roles %}<option value="{{ r }}"{% if p.peer_role == r %} selected{% endif %}>{{ r }}</option>{% endfor %}</select></label>
+          <label><input type="checkbox" name="collection_paused" value="1"{% if p.collection_paused %} checked{% endif %}> Pause collection</label>
+          <button class="button small" type="submit">Save</button>
+          <p class="form-error" role="alert"></p>
+        </form>
+      </details>
+    </td>
+  </tr>{% if p.media.exists %}<tr><td colspan="6"><details><summary>Recent posts ({{ p.media.count }})</summary><ul class="plain">{% for m in p.media.all|slice:":8" %}<li>{{ m.media_type }} · {{ m.caption|truncatewords:12 }}{% if m.permalink %} · <a href="{{ m.permalink }}" rel="noopener noreferrer" target="_blank">Permalink</a>{% endif %}</li>{% endfor %}</ul></details></td></tr>{% endif %}{% endfor %}</tbody></table></div>
   {% else %}
-  <div class="empty"><h3>No curated peers yet</h3><p>Discover candidates below, then promote with a confirmed Instagram username.</p></div>
+  <div class="empty"><h3>No curated peers yet</h3><p>Discover candidates below, or add a peer manually.</p></div>
   {% endif %}
+</section>
+<section class="section card">
+  <h3 class="h4">Add peer manually</h3>
+  <form data-api="/api/peers/create" data-after="reload" class="stack">
+    <label>Name <input name="label" required maxlength="200"></label>
+    <label>Instagram @ <input name="instagram_username" maxlength="80"></label>
+    <label>Role <select name="peer_role">{% for r in peer_roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}</select></label>
+    <button class="button" type="submit">Add peer</button>
+    <p class="form-error" role="alert"></p>
+  </form>
 </section>
 <section class="section">
   <h2 class="h3">Candidates</h2>
@@ -32,14 +56,20 @@
       <form data-api="/api/peers/promote" data-after="reload" class="stack inline-form">
         <input type="hidden" name="candidate_id" value="{{ c.pk }}">
         <label>Instagram @ <input name="instagram_username" placeholder="required for collection" maxlength="80"></label>
+        <label>Role <select name="peer_role" required>{% for r in peer_roles %}<option value="{{ r }}"{% if r == "comparable" %} selected{% endif %}>{{ r }}</option>{% endfor %}</select></label>
         <label>MusicBrainz MBID <input name="musicbrainz_mbid" value="{{ c.musicbrainz_mbid }}" maxlength="36"></label>
         <button class="button" type="submit">Promote to peer</button>
+        <p class="form-error" role="alert"></p>
+      </form>
+      <form data-api="/api/peers/reject" data-after="reload" class="inline">
+        <input type="hidden" name="candidate_id" value="{{ c.pk }}">
+        <button class="button subtle small" type="submit">Reject</button>
         <p class="form-error" role="alert"></p>
       </form>
     </td>
   </tr>{% endfor %}</tbody></table></div>
   {% else %}
-  <p class="meta">No pending candidates. Use Discover similar or import manually later.</p>
+  <p class="meta">No pending candidates. Use Discover similar or add a peer manually.</p>
   {% endif %}
 </section>
 {% endblock %}

@@ -26,7 +26,7 @@ class PeerCandidate(models.Model):
 
 class PeerProfile(models.Model):
     STATES = [(s, s) for s in ["pending", "reviewed", "rejected"]]
-    ROLES = [(s, s) for s in ["comparable", "aspirational", "reference_only", "excluded"]]
+    ROLES = [(s, s) for s in ["comparable", "aspirational", "reference_only", "excluded", "unresolved"]]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     handle = models.CharField(max_length=80, blank=True, default="")
     label = models.CharField(max_length=200)
@@ -38,6 +38,7 @@ class PeerProfile(models.Model):
     notes = models.TextField(blank=True, default="")
     capability = models.JSONField(default=dict)
     collection_health = models.JSONField(default=dict)
+    collection_paused = models.BooleanField(default=False)
     created_at = models.DateTimeField()
     reviewed_at = models.DateTimeField(null=True)
     candidate = models.ForeignKey(PeerCandidate, null=True, blank=True, on_delete=models.SET_NULL)
@@ -72,6 +73,23 @@ class InspirationReference(models.Model):
     influence = models.TextField(blank=True, default="")
     in_analytical_pool = models.BooleanField(default=False)
     collection_source = models.CharField(max_length=40, blank=True, default="manual")
+    canonical_key = models.CharField(max_length=120, blank=True, default="")
+    is_bookmark = models.BooleanField(default=False)
+    ORIGINS = [(s, s) for s in ["manual", "peer_media"]]
+    origin_type = models.CharField(max_length=20, choices=ORIGINS, default="manual")
+    owner_note = models.TextField(blank=True, default="")
+    peer_media = models.ForeignKey(
+        "PeerMedia", null=True, blank=True, on_delete=models.SET_NULL, related_name="saved_references"
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["peer_media"],
+                condition=models.Q(peer_media__isnull=False, is_bookmark=True),
+                name="unique_bookmark_per_peer_media",
+            ),
+        ]
 
 
 class PeerMedia(models.Model):
@@ -88,6 +106,30 @@ class PeerMedia(models.Model):
     class Meta:
         constraints = [models.UniqueConstraint(fields=["peer", "external_id"], name="unique_peer_media")]
         ordering = ["-published_at"]
+
+
+class PeerMediaMetricSnapshot(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    media = models.ForeignKey(PeerMedia, on_delete=models.CASCADE, related_name="metric_snapshots")
+    captured_at = models.DateTimeField()
+    metrics = models.JSONField(default=dict)
+    source_version = models.CharField(max_length=40, blank=True, default="")
+
+    class Meta:
+        ordering = ["-captured_at"]
+
+
+class ActivityReference(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    activity = models.ForeignKey("campaigns.Activity", on_delete=models.CASCADE, related_name="reference_links")
+    reference = models.ForeignKey(InspirationReference, on_delete=models.CASCADE, related_name="activity_links")
+    origin = models.CharField(max_length=40, default="owner_attach")
+    note = models.TextField(blank=True, default="")
+    created_at = models.DateTimeField()
+    reference_version = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=["activity", "reference"], name="unique_activity_reference")]
 
 
 class ReviewedContextItem(models.Model):

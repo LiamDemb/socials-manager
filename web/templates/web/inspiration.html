@@ -1,13 +1,86 @@
 {% extends "web/base.html" %}{% load be %}
+{% block actions %}
+<a class="button" href="/inspiration?tab=explore"{% if tab == "explore" %} aria-current="page"{% endif %}>Explore</a>
+<a class="button" href="/inspiration?tab=saved"{% if tab == "saved" %} aria-current="page"{% endif %}>Saved</a>
+{% endblock %}
 {% block content %}
 <section class="section">
-  <h2 class="h3">References</h2>
-  <p class="meta">Creative references are ideas, not evidence that a tactic works. Manual saves are not in the analytical sampling pool unless collected through an eligible representative process.</p>
-  {% if refs %}
-  <ul class="plain">{% for r in refs %}<li class="card"><strong>{{ r.title }}</strong>{% if r.url %} · <a href="{{ r.url }}" rel="noopener noreferrer" target="_blank">Source</a>{% endif %}
-    <p class="meta">{{ r.scope }} · retrieved {{ r.retrieved_at|local }}</p>{% if r.excerpt %}<p class="wrap">{{ r.excerpt }}</p>{% endif %}</li>{% endfor %}</ul>
+  <p class="meta">
+    {% if summary.explore_posts %}<strong>{{ summary.explore_posts }}</strong> collected posts from eligible peers.
+    {% elif summary.eligible_peers %}Peers are set up; collection may still be pending or blocked in Sources.
+    {% else %}Add and review peers, then collect posts via Business Discovery.{% endif %}
+    Saved bookmarks: {{ summary.saved_count }}.
+  </p>
+  <form class="row inline-form" method="get" action="/inspiration">
+    <input type="hidden" name="tab" value="{{ tab }}">
+    <label>Search <input name="q" value="{{ q }}" placeholder="Caption or title"></label>
+    <label>Peer
+      <select name="peer">
+        <option value="">All</option>
+        {% for p in peers %}<option value="{{ p.pk }}"{% if peer_filter == p.pk|stringformat:"s" %} selected{% endif %}>{{ p.label }}</option>{% endfor %}
+      </select>
+    </label>
+    <button class="button" type="submit">Filter</button>
+  </form>
+</section>
+{% if tab == "explore" %}
+<section class="section">
+  <h2 class="h3">Explore collected posts</h2>
+  <p class="meta">Creative examples from reviewed peers. Saving is a bookmark, not proof a tactic works.</p>
+  {% if cards %}
+  <ul class="card-grid">{% for c in cards %}
+    <li class="card ref-card">
+      <p class="meta">{{ c.peer_label }} · {{ c.media_type_display }}{% if c.published_at %} · {{ c.published_at|slice:":10" }}{% endif %}</p>
+      <p class="wrap">{% if c.caption_excerpt %}{{ c.caption_excerpt }}{% else %}<span class="meta">No caption stored.</span>{% endif %}</p>
+      {% if c.permalink %}<p><a href="{{ c.permalink }}" rel="noopener noreferrer" target="_blank">Source permalink</a></p>{% endif %}
+      {% if c.metrics.public_likes is not None %}<p class="meta">Public likes at capture: {{ c.metrics.public_likes }}{% if c.metrics.public_comments is not None %}; comments: {{ c.metrics.public_comments }}{% endif %}. Not performance proof.</p>{% endif %}
+      <form data-api="/api/inspiration/save" data-after="reload" class="inline">
+        <input type="hidden" name="peer_media_id" value="{{ c.id }}">
+        <input type="hidden" name="redirect" value="/inspiration?tab=explore">
+        <button class="button small" type="submit"{% if c.is_saved %} disabled{% endif %}>{% if c.is_saved %}Saved{% else %}Save{% endif %}</button>
+        <p class="form-error" role="alert"></p>
+      </form>
+    </li>{% endfor %}</ul>
+  {% if num_pages > 1 %}<p class="meta">Page {{ page_obj.number }} of {{ num_pages }} ({{ total }} posts)</p>{% endif %}
   {% else %}
-  <div class="empty"><h3>No references yet</h3><p>Attach references from campaigns or import reviewed context when available.</p></div>
+  <div class="empty"><h3>No posts to explore</h3>
+    {% if summary.eligible_peers %}<p>Collection may be queued, failed, or blocked. Check <a href="/peers">Peers</a> and <a href="/sources">Sources</a>.</p>
+    {% else %}<p>Promote peers with confirmed Instagram handles and a creative role (not excluded).</p>{% endif %}
+  </div>
   {% endif %}
 </section>
+{% else %}
+<section class="section">
+  <h2 class="h3">Saved references</h2>
+  {% if cards %}
+  <ul class="plain">{% for c in cards %}
+    <li class="card">
+      <strong>{{ c.title }}</strong>
+      {% if c.url %} · <a href="{{ c.url }}" rel="noopener noreferrer" target="_blank">Source</a>{% elif c.permalink %} · <a href="{{ c.permalink }}" rel="noopener noreferrer" target="_blank">Permalink</a>{% endif %}
+      <p class="meta">{{ c.origin_type }}{% if c.owner_note %} · {{ c.owner_note }}{% endif %}</p>
+      {% if c.excerpt or c.caption_excerpt %}<p class="wrap">{{ c.excerpt|default:c.caption_excerpt }}</p>{% endif %}
+      {% if c.reference_id %}
+      <form data-api="/api/inspiration/unsave" data-after="reload" class="inline">
+        <input type="hidden" name="reference_id" value="{{ c.reference_id }}">
+        <button class="button subtle small" type="submit">Remove bookmark</button>
+        <p class="form-error" role="alert"></p>
+      </form>
+      {% endif %}
+    </li>{% endfor %}</ul>
+  {% else %}
+  <div class="empty"><h3>No saved references</h3><p>Save posts from Explore or add a manual link below.</p></div>
+  {% endif %}
+</section>
+<section class="section card">
+  <h3 class="h4">Add manual reference</h3>
+  <p class="meta">A link you provide is not verified performance data and does not grant collection rights.</p>
+  <form data-api="/api/inspiration/manual" data-after="reload" class="stack">
+    <label>Title <input name="title" required maxlength="200"></label>
+    <label>URL <input name="url" type="url" required placeholder="https://…" maxlength="500"></label>
+    <label>Note <textarea name="note" rows="2" maxlength="2000"></textarea></label>
+    <button class="button" type="submit">Add reference</button>
+    <p class="form-error" role="alert"></p>
+  </form>
+</section>
+{% endif %}
 {% endblock %}
