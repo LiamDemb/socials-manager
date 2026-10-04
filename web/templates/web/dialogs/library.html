@@ -10,7 +10,7 @@
   {% if cards %}
   <ul class="plain">{% for c in cards %}
     <li class="card">
-      <p class="meta">{{ c.peer_label }} · {{ c.media_type_display }}</p>
+      <p class="meta">{{ c.peer_label }} · {{ c.media_type_display }} · <a href="/ui/media/{{ c.id }}{% if activity_id %}?activity={{ activity_id }}{% endif %}" data-dialog-push>Details</a></p>
       <p class="wrap">{{ c.caption_excerpt|default:"No caption." }}</p>
       {% if activity_id %}
       <form data-api="/api/activities/{{ activity_id }}/references/attach" data-after="reload" class="inline">

@@ -1,0 +1,29 @@
+{% extends "web/base.html" %}
+{% block content %}
+<section class="section">
+  <p class="meta"><a href="/inspiration">Inspiration</a> · {{ media.peer.label }} · {{ inspection.media_type_display }}</p>
+  <h2 class="h3">Reference</h2>
+  <p class="meta">Availability: {{ inspection.media_availability }}. {% if inspection.media_availability == "link_only" %}Caption and source link only; no compact visual pack yet.{% elif inspection.media_availability == "partial" %}Sampled or partial coverage. Not a full-video analysis.{% elif inspection.media_availability == "evicted" %}The proxy was evicted. The source link still works.{% endif %}</p>
+  {% if media.permalink %}<p><a href="{{ media.permalink }}" rel="noopener noreferrer" target="_blank">Source permalink</a></p>{% endif %}
+  <p class="wrap">{{ inspection.caption_excerpt|default:"No caption stored." }}</p>
+  {% if assets %}
+  <ul class="plain">{% for a in assets %}
+    <li class="card">
+      <p class="meta">{{ a.role }}{% if a.duration_seconds %} · {{ a.duration_seconds }}s{% endif %}</p>
+      {% if a.mime_type == "image/jpeg" or a.mime_type == "image/png" %}
+      <img src="/media/assets/{{ a.pk }}" alt="{{ a.role }}" style="max-width:100%">
+      {% elif a.relative_path %}
+      <p><a href="/media/assets/{{ a.pk }}">Open stored derivative</a></p>
+      {% endif %}
+    </li>
+  {% endfor %}</ul>
+  {% else %}
+  <p class="meta">No compact image or storyboard is stored. This is not a broken player; use the source link.</p>
+  {% endif %}
+  <h3 class="h4">Labels</h3>
+  {% if inspection.features %}
+  <ul class="plain">{% for f in inspection.features %}<li>{{ f.feature_key }} · {{ f.review_state }} · {{ f.value }}</li>{% endfor %}</ul>
+  {% else %}<p class="meta">No extracted labels yet. Queue processing from Sources or the media process action.</p>{% endif %}
+  <p><a href="/ui/reference/{{ media.pk }}/why" data-dialog-open>Why this example</a></p>
+</section>
+{% endblock %}

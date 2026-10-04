@@ -65,6 +65,22 @@
 </section>
 
 <section class="section card">
+  <h2 class="h3">Media storage and models</h2>
+  <p class="meta">Compact analysis storage and the playback cache are separate. Configured credentials do not certify peer-video access.</p>
+  <dl class="facts">
+    <div><dt>Analysis bytes</dt><dd>{{ media_usage.preview_analysis_bytes }} / {{ media_usage.preview_analysis_quota }}</dd></div>
+    <div><dt>Playback cache</dt><dd>{{ media_usage.playback_cache_bytes }} / {{ media_usage.playback_cache_quota }}</dd></div>
+    <div><dt>Instagram media capability</dt><dd>{{ media_capability.peer_video_acquisition }} — {{ media_capability.reason }}</dd></div>
+  </dl>
+  <form data-api="/api/media/cache/clear" data-after="reload" class="inline">
+    <input type="hidden" name="class" value="playback">
+    <button class="button" type="submit">Clear playback cache</button>
+    <p class="form-error" role="alert"></p>
+  </form>
+  <p class="meta"><a href="/inspiration/review">Review suggested content labels</a></p>
+</section>
+
+<section class="section card">
   <h2 class="h3">Diagnostics</h2>
   <dl class="facts">{% for k, v in diag.items %}<div><dt>{{ k|humanise }}</dt><dd class="wrap">{{ v }}</dd></div>{% endfor %}</dl>
 </section>

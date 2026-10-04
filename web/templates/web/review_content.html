@@ -1,0 +1,25 @@
+{% extends "web/base.html" %}
+{% block content %}
+<section class="section">
+  <h2 class="h3">Review content</h2>
+  <p class="meta">Suggested labels only. Public like counts are hidden here so review is not biased by popularity.</p>
+  {% if rows %}
+  <ul class="plain">{% for row in rows %}
+    <li class="card">
+      <p class="meta">{{ row.post.peer.label }} · {{ row.feature_key }} · revision {{ row.review_revision }}</p>
+      <p>Suggested value: {{ row.value_json.value }}</p>
+      <form data-api="/api/media/review-features" data-after="reload" class="inline">
+        <input type="hidden" name="peer_media_id" value="{{ row.post_id }}">
+        <input type="hidden" name="feature_key" value="{{ row.feature_key }}">
+        <input type="hidden" name="review_state" value="accepted">
+        <input type="hidden" name="expected_revision" value="{{ row.review_revision }}">
+        <button class="button small" type="submit">Accept</button>
+        <p class="form-error" role="alert"></p>
+      </form>
+    </li>
+  {% endfor %}</ul>
+  {% else %}
+  <div class="empty"><h3>No suggested labels</h3><p>Process a post after collection. Suggested fields appear here; nothing is accepted until you review it.</p></div>
+  {% endif %}
+</section>
+{% endblock %}

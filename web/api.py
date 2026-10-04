@@ -457,6 +457,135 @@ def activity_attach_reference(request, body, key, activity_id):
 
 
 @api
+def inspiration_recommend(request, body, key):
+    from campaigns.models import Activity
+    from intelligence.inspiration_service import recommend_for_activity
+
+    def run():
+        activity = None
+        if body.get("activity_id"):
+            activity = Activity.objects.get(pk=body["activity_id"])
+        return recommend_for_activity(
+            activity=activity,
+            context=body.get("context") or {},
+            mode=body.get("mode") or "best_fit",
+            limit=min(int(body.get("limit") or 5), 5),
+        )
+
+    return idempotent(key, "inspiration.recommend", run)
+
+
+@api
+def media_process(request, body, key):
+    from context.media_pack import ensure_media_pack
+
+    def run():
+        return ensure_media_pack(body["peer_media_id"], reprocess=bool(body.get("reprocess")))
+
+    return idempotent(key, "media.process", run)
+
+
+@api
+def media_inspect(request, body, key):
+    from context.media_inspect import inspect_peer_media
+
+    def run():
+        return inspect_peer_media(body["peer_media_id"])
+
+    return idempotent(key, "media.inspect", run)
+
+
+@api
+def media_upload(request, body, key):
+    from context.media_acquire import reject_extension_mismatch, sniff_image_mime
+    from context.media_storage import store_blob
+    from context.models import MediaAsset, PeerMedia
+    from core import clock
+
+    def run():
+        upload = request.FILES.get("file")
+        if upload is None:
+            raise DomainError("file_required", "Choose a file to upload.")
+        data = upload.read()
+        ext = (upload.name.rsplit(".", 1)[-1] if "." in upload.name else "").lower()
+        mismatch = reject_extension_mismatch(ext, data)
+        if mismatch:
+            raise DomainError("invalid_mime", "The file contents do not match an allowed image or video type.")
+        if sniff_image_mime(data) is None:
+            raise DomainError("invalid_mime", "Unsupported file contents.")
+        try:
+            digest, rel = store_blob(data, ext=ext or "bin")
+        except ValueError as exc:
+            raise DomainError(str(exc), "Storage quota blocked this upload.", status=409)
+        post = PeerMedia.objects.get(pk=body.get("peer_media_id"))
+        asset = MediaAsset.objects.create(
+            post=post,
+            role="analysis_image",
+            content_hash=digest,
+            relative_path=rel,
+            mime_type=sniff_image_mime(data) or "",
+            byte_size=len(data),
+            captured_at=clock.now(),
+            retention_class="owner_authorised_upload",
+        )
+        return {
+            "asset_id": str(asset.pk),
+            "note": "Upload is a separate authorised acquisition. It does not grant API metric permission.",
+        }
+
+    return idempotent(key, "media.upload", run)
+
+
+@api
+def media_clear_cache(request, body, key):
+    from context.media_storage import evict_playback
+
+    def run():
+        if body.get("class") not in ("playback",):
+            raise DomainError("invalid_cache_class", "Only the playback cache can be cleared here.")
+        return evict_playback()
+
+    return idempotent(key, "media.clear_cache", run)
+
+
+@api
+def media_job_status(request, body, key):
+    from core.models import Job
+
+    def run():
+        job = Job.objects.get(pk=body["job_id"])
+        return {"job_id": str(job.pk), "state": job.state, "task": job.task, "error": job.safe_error}
+
+    return idempotent(key, "media.job_status", run)
+
+
+@api
+def media_review_features(request, body, key):
+    from context.content_features import review_features
+
+    def run():
+        decisions = body.get("decisions") or []
+        if isinstance(decisions, str) and decisions:
+            decisions = json.loads(decisions)
+        if not decisions and body.get("feature_key"):
+            decisions = [
+                {
+                    "feature_key": body["feature_key"],
+                    "review_state": body.get("review_state") or "accepted",
+                    "value": body.get("value"),
+                }
+            ]
+        review_features(
+            body["peer_media_id"],
+            decisions,
+            expected_revision=int(body["expected_revision"]) if body.get("expected_revision") else None,
+        )
+        return {"ok": True}
+
+    return idempotent(key, "media.review_features", run)
+
+
+@api
 def activity_detach_reference(request, body, key, activity_id):
     from context.inspiration_services import detach_reference
 

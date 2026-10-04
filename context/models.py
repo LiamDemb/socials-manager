@@ -93,8 +93,24 @@ class InspirationReference(models.Model):
 
 
 class PeerMedia(models.Model):
+    AVAILABILITY = [
+        (s, s)
+        for s in [
+            "link_only",
+            "queued",
+            "analysing",
+            "partial",
+            "ready",
+            "restricted",
+            "failed",
+            "evicted",
+        ]
+    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     peer = models.ForeignKey(PeerProfile, on_delete=models.CASCADE, related_name="media")
+    provider_namespace = models.CharField(max_length=40, default="instagram")
+    acquisition_revision = models.PositiveIntegerField(default=1)
+    media_availability = models.CharField(max_length=20, choices=AVAILABILITY, default="link_only")
     external_id = models.CharField(max_length=80)
     permalink = models.URLField(max_length=500, blank=True, default="")
     caption = models.TextField(blank=True, default="")
@@ -117,6 +133,118 @@ class PeerMediaMetricSnapshot(models.Model):
 
     class Meta:
         ordering = ["-captured_at"]
+
+
+class MediaAsset(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    post = models.ForeignKey(PeerMedia, on_delete=models.CASCADE, related_name="assets")
+    role = models.CharField(max_length=40)
+    content_hash = models.CharField(max_length=64, blank=True, default="")
+    relative_path = models.CharField(max_length=300, blank=True, default="")
+    mime_type = models.CharField(max_length=80, blank=True, default="")
+    byte_size = models.PositiveIntegerField(default=0)
+    width = models.PositiveIntegerField(null=True)
+    height = models.PositiveIntegerField(null=True)
+    duration_seconds = models.FloatField(null=True)
+    captured_at = models.DateTimeField()
+    retention_class = models.CharField(max_length=40, default="analysis_derivative")
+
+    class Meta:
+        indexes = [models.Index(fields=["post", "role"])]
+
+
+class MediaPack(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    post = models.ForeignKey(PeerMedia, on_delete=models.CASCADE, related_name="packs")
+    profile_version = models.CharField(max_length=40, default="media-compact-v1")
+    input_hash = models.CharField(max_length=64)
+    manifest_hash = models.CharField(max_length=64, blank=True, default="")
+    state = models.CharField(max_length=20, default="pending")
+    reason = models.CharField(max_length=120, blank=True, default="")
+    sampling_manifest = models.JSONField(default=dict)
+    stored_bytes = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField()
+    completed_at = models.DateTimeField(null=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["post", "profile_version", "input_hash"], name="unique_media_pack_input")
+        ]
+
+
+class ContentAnalysisRun(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    pack = models.ForeignKey(MediaPack, on_delete=models.CASCADE, related_name="analysis_runs")
+    adapter = models.CharField(max_length=80)
+    model_revision = models.CharField(max_length=120)
+    schema_version = models.CharField(max_length=40, default="content-labels-v1")
+    status = models.CharField(max_length=20, default="pending")
+    reason = models.CharField(max_length=200, blank=True, default="")
+    output = models.JSONField(default=dict)
+    input_hash = models.CharField(max_length=64)
+    elapsed_ms = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField()
+
+
+class ContentFeatureValue(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    post = models.ForeignKey(PeerMedia, on_delete=models.CASCADE, related_name="content_features")
+    feature_key = models.CharField(max_length=80)
+    feature_version = models.CharField(max_length=20, default="1")
+    value_json = models.JSONField(default=dict)
+    review_state = models.CharField(max_length=20, default="suggested")
+    review_revision = models.PositiveIntegerField(default=1)
+    support = models.JSONField(default=list)
+    origin = models.CharField(max_length=40, default="extraction")
+    source_run = models.ForeignKey(
+        ContentAnalysisRun, null=True, blank=True, on_delete=models.SET_NULL, related_name="feature_values"
+    )
+    created_at = models.DateTimeField()
+
+    class Meta:
+        indexes = [models.Index(fields=["post", "feature_key", "review_state"])]
+
+
+class ContentEmbedding(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    post = models.ForeignKey(PeerMedia, on_delete=models.CASCADE, related_name="embeddings")
+    asset = models.ForeignKey(MediaAsset, null=True, blank=True, on_delete=models.CASCADE, related_name="embeddings")
+    encoder_version = models.CharField(max_length=80)
+    dimensions = models.PositiveIntegerField()
+    vector_blob = models.BinaryField()
+    vector_hash = models.CharField(max_length=64)
+    frame_role = models.CharField(max_length=40, blank=True, default="")
+    created_at = models.DateTimeField()
+
+
+class InspirationRequestRecord(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    schema_version = models.CharField(max_length=40, default="inspiration-request-v1")
+    fingerprint = models.CharField(max_length=64, unique=True)
+    payload = models.JSONField(default=dict)
+    created_at = models.DateTimeField()
+
+
+class InspirationRecommendationRun(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    request = models.ForeignKey(InspirationRequestRecord, on_delete=models.CASCADE, related_name="runs")
+    policy_version = models.CharField(max_length=40, default="inspiration-rank-v1")
+    request_fingerprint = models.CharField(max_length=64)
+    candidates = models.JSONField(default=list)
+    excluded = models.JSONField(default=list)
+    gaps = models.JSONField(default=list)
+    created_at = models.DateTimeField()
+
+
+class RecommendationExposure(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    run = models.ForeignKey(InspirationRecommendationRun, null=True, blank=True, on_delete=models.SET_NULL)
+    reference = models.ForeignKey(InspirationReference, null=True, blank=True, on_delete=models.CASCADE)
+    peer_media = models.ForeignKey(PeerMedia, null=True, blank=True, on_delete=models.CASCADE, related_name="exposures")
+    event = models.CharField(max_length=20)
+    position = models.PositiveIntegerField(null=True)
+    note = models.CharField(max_length=200, blank=True, default="")
+    created_at = models.DateTimeField()
 
 
 class ActivityReference(models.Model):

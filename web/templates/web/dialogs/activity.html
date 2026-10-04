@@ -14,7 +14,7 @@
     <ul class="plain">{% for r in references %}
       <li class="card">
         <p><strong>{{ r.title|default:r.peer_label }}</strong> · {{ r.media_type_display|default:"Reference" }}</p>
-        <p class="meta">{{ r.match_reason|default:"Attached example" }}{% if r.metrics_note %} · {{ r.metrics_note }}{% endif %}</p>
+        <p class="meta">{% if r.attachment_origin == "owner_attach" %}You attached this.{% elif r.attachment_origin %}Suggested ({{ r.attachment_origin }}).{% else %}Attached example.{% endif %} {{ r.match_reason|default:"" }}{% if r.metrics_note %} · {{ r.metrics_note }}{% endif %}</p>
         {% if r.permalink or r.url %}<p><a href="{{ r.permalink|default:r.url }}" rel="noopener noreferrer" target="_blank">Source</a></p>{% endif %}
         <form data-api="/api/activities/{{ v.a.pk }}/references/detach" data-after="reload" class="inline">
           <input type="hidden" name="reference_id" value="{{ r.reference_id }}">

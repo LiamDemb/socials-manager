@@ -167,17 +167,21 @@ def generate_evidence_activities(payload, operational_preview):
         role_label = (strategic.get("roles") or ["support"])[0]
         title = f"{ctx['object_label'] or ctx['type_label']}: {tactic['formats'][0]} ({tactic['id'].replace('_', ' ')})"
         claims = build_claim_records(strategic, evidence)
-        from intelligence.reference_match import suggest_for_preview_activity
+        from intelligence.inspiration_service import recommend_for_preview_fields
 
-        ref_suggestions = suggest_for_preview_activity(
+        ref_out = recommend_for_preview_fields(
             {
                 "channel": tactic["channels"][0],
                 "format": tactic["formats"][0],
-                "campaign_type": payload["type"],
-                "provenance": {"role": role_label},
+                "purpose": (needs.get("primary_purpose") or "") if isinstance(needs, dict) else "",
+                "roles": [role_label],
+                "phase": phase,
             },
-            limit=2,
+            limit=3,
         )
+        ref_suggestions = ref_out.get("suggestions") or []
+        if ref_out.get("gaps"):
+            planning_notes.extend(ref_out["gaps"][:2])
         activity = {
             "template_key": tactic["id"],
             "scheduling_json": json.dumps(schedule),

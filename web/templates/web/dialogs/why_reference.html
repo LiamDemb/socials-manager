@@ -1,0 +1,34 @@
+{% include "web/dialogs/_head.html" with heading="Why this example" eyebrow="Inspiration" %}
+<div class="dialog-body scroll">
+  {% if fit %}
+  <section>
+    <h3>Creative fit</h3>
+    <ul class="plain">{% for r in fit %}<li>{{ r }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+  {% if response %}
+  <section>
+    <h3>Observed response</h3>
+    <p class="meta">{{ response }}</p>
+  </section>
+  {% endif %}
+  {% if association %}
+  <section>
+    <h3>Statistical association</h3>
+    <p class="meta">{{ association }}</p>
+  </section>
+  {% endif %}
+  {% if adaptation %}
+  <section>
+    <h3>Adaptation</h3>
+    <p class="meta">{{ adaptation }}</p>
+  </section>
+  {% endif %}
+  {% if gaps %}
+  <section>
+    <h3>Gaps</h3>
+    <ul class="plain">{% for g in gaps %}<li class="meta">{{ g }}</li>{% endfor %}</ul>
+  </section>
+  {% endif %}
+</div>
+{% include "web/dialogs/_foot.html" %}

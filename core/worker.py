@@ -34,7 +34,18 @@ def run_collect_job(job):
     run_collect(job)
 
 
-HANDLERS = {"backup.daily": run_backup_job, "cleanup.orphans": run_cleanup_job, "collect.source": run_collect_job}
+def run_media_process_job(job):
+    from context.media_pack import run_media_process_job as process
+
+    return process(job.scope_key, job.input_key or "")
+
+
+HANDLERS = {
+    "backup.daily": run_backup_job,
+    "cleanup.orphans": run_cleanup_job,
+    "collect.source": run_collect_job,
+    "media.process": run_media_process_job,
+}
 
 
 def handle_outbox(limit=50):

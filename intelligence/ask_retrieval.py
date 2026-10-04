@@ -53,11 +53,56 @@ def retrieve_for_question(question: str, scope: dict | None = None) -> dict:
                         "source": "campaigns",
                     }
                 )
+    inspiration = _inspiration_retrieval(question, scope)
+    facts = facts + inspiration.get("facts", [])
+    gaps = gaps + inspiration.get("gaps", [])
     return {
         "facts": facts,
-        "llm_facts": llm_facts,
+        "llm_facts": llm_facts + inspiration.get("facts", []),
         "activities": activities,
         "gaps": gaps,
-        "basis_count": len(ctx["facts"]),
+        "basis_count": len(ctx["facts"]) + len(inspiration.get("facts", [])),
         "truncated": truncated,
+        "inspiration_run_id": inspiration.get("run_id"),
     }
+
+
+def _inspiration_retrieval(question: str, scope: dict) -> dict:
+    q = question.lower()
+    if not any(w in q for w in ("example", "reference", "inspiration", "similar post", "peer post")):
+        return {"facts": [], "gaps": []}
+    from campaigns.models import Activity
+
+    from intelligence.inspiration_service import recommend_for_activity
+
+    activity = None
+    ctx = {}
+    if scope.get("activity_id"):
+        activity = Activity.objects.filter(pk=scope["activity_id"]).first()
+    if scope.get("campaign_id") and not activity:
+        activity = Activity.objects.filter(campaign_id=scope["campaign_id"]).order_by("all_day_date").first()
+    if activity:
+        ctx = {
+            "channel": activity.channel or "",
+            "format": activity.format or "",
+            "purpose": activity.purpose or "",
+        }
+    mode = "strong_public_response" if "strong" in q and "response" in q else "best_fit"
+    out = recommend_for_activity(activity=activity, context=ctx, mode=mode, limit=5)
+    facts = []
+    for s in out.get("suggestions") or []:
+        facts.append(
+            {
+                "text": (
+                    f"Inspiration candidate ({s.get('tier', 'candidate')}): {s.get('peer_label', '')} "
+                    f"{s.get('media_type_display', '')} — {s.get('match_reason', '')}"
+                ),
+                "evidence_id": str(s.get("id") or ""),
+                "kind": "inspiration",
+                "source": "intelligence.inspiration_service",
+            }
+        )
+    gaps = list(out.get("gaps") or [])
+    if not facts:
+        gaps.append("No eligible inspiration examples matched this Ask phrasing and scope.")
+    return {"facts": facts, "gaps": gaps, "run_id": out.get("run_id")}

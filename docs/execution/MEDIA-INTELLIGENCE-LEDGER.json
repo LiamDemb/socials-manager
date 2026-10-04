@@ -1,0 +1,118 @@
+{
+  "contract": "Socials_Manager_Media_Intelligence_Implementation_Plan.md",
+  "updated": "2026-10-03",
+  "hardware": {
+    "machine": "Apple M1 Pro, 16 GB RAM, 10 cores, arm64, macOS 15.7.4",
+    "gemma": {
+      "candidate": "google/gemma-4-E2B-it",
+      "runtime_id": "mlx-community/gemma-4-e2b-it-4bit",
+      "runtime": "mlx-vlm 0.7.4",
+      "model_type": "gemma4",
+      "weights_bytes": 3550670554,
+      "peak_memory_gb": 4.25,
+      "qualified": false
+    },
+    "clip": {
+      "encoder": "ViT-B-32",
+      "pretrained": "openai",
+      "package": "open-clip-torch 3.3.0",
+      "torch": "2.14.1",
+      "dimensions": 512,
+      "qualified_ndcg": false
+    },
+    "pymc": "6.3.2"
+  },
+  "classes": {
+    "verified": "Implemented and exercised by a test or a measured local run.",
+    "demonstrated_unqualified": "The code path ran on this machine. It is not a qualified production claim.",
+    "source_or_data_blocked": "The software path exists. The missing input is owner data, review, or a source permission.",
+    "missing_implementation": "No executable path yet."
+  },
+  "requirements": {
+    "M01": {"status": "verified", "refs": ["context/library.py", "context/inspiration_services.py", "tests/test_peers_inspiration_library.py"]},
+    "M02": {"status": "verified", "refs": ["context/media_capability.py", "sources/meta_graph.py", "tests/test_media_intelligence.py"]},
+    "M03": {"status": "verified", "refs": ["context/media_config.py", "context/media_storage.py", "context/media_pack.py"]},
+    "M04": {"status": "verified", "refs": ["context/visual_descriptors.py", "intelligence/content_registry.py", "context/content_features.py"]},
+    "M05": {"status": "demonstrated_unqualified", "refs": ["intelligence/gemma_adapter.py", "intelligence/clip_adapter.py", "tests/test_clip_retrieval.py", "tests/test_owner_asset_workflow.py"]},
+    "M06": {"status": "verified", "refs": ["intelligence/inspiration_retrieve.py", "intelligence/inspiration_rank.py"]},
+    "M07": {"status": "verified", "refs": ["intelligence/inspiration_rank.py", "intelligence/response_support.py"]},
+    "M08": {"status": "synthetic_verified_owner_data_blocked", "refs": ["intelligence/peer_dataset.py", "intelligence/stats/post_response.py", "intelligence/stats/bayes_fit.py", "tests/test_content_bayes.py"]},
+    "M09": {"status": "verified", "refs": ["intelligence/inspiration_service.py", "intelligence/ask_retrieval.py", "context/owner_asset.py"]},
+    "M10": {"status": "verified", "refs": ["context/media_invalidation.py", "context/migrations/0006_exposure_peer_media.py"]},
+    "M11": {"status": "verified", "refs": ["web/static/js/app.js", "tests/test_browser.py"]},
+    "M12": {"status": "handover_current_qualification_open", "refs": ["docs/reports/2026-10-03-media-intelligence-handover.md"]}
+  },
+  "tests": {
+    "T01": "tests/test_media_intelligence.py::LibraryContractTests",
+    "T02": "tests/test_media_intelligence.py::CapabilityTests",
+    "T03": "tests/test_media_intelligence.py::IntegrationGuardTests.test_t03_dedup_and_cap",
+    "T04": "tests/test_media_intelligence.py::SamplingTests.test_t04_frames_carousel_and_oversize",
+    "T05": "tests/test_media_intelligence.py::SamplingTests.test_t05_uniform_palette_ignores_opening_only",
+    "T06": "tests/test_media_intelligence.py::ExtractionContractTests.test_t06_rejects_invented_fields",
+    "T07": "tests/test_media_intelligence.py::ExtractionContractTests.test_t07_review_appends_and_omits_popularity",
+    "T08": "tests/test_media_intelligence.py::RankingPolicyTests.test_t08_transfer_tier",
+    "T09": "tests/test_media_intelligence.py::RankingPolicyTests.test_t09_mmr_and_rrf_denominator",
+    "T10": "tests/test_media_intelligence.py::RankingPolicyTests.test_t10_viral_does_not_change_tier",
+    "T11": "tests/test_media_intelligence.py::ContentAssociationTests.test_t11_one_post_one_row",
+    "T12": "tests/test_media_intelligence.py::ContentAssociationTests.test_t12_confounded_and_repeated_rows",
+    "T13": "tests/test_media_intelligence.py::IntegrationGuardTests.test_t13_ask_does_not_attach",
+    "T14": "existing adaptation approval tests; not re-certified in this change",
+    "T15": "tests/test_media_intelligence.py::IntegrationGuardTests.test_t15_save_does_not_mark_fits",
+    "T16": "tests/test_browser.py::Browser.test_t16_reference_navigation_preserves_edits — passed at 360x640: focus, dialog scroll, Back, and unsaved notes",
+    "T17": "tests/test_media_intelligence.py::IntegrationGuardTests.test_t17_library_without_invented_assets"
+  },
+  "demonstrations": {
+    "clip_retrieval": "tests/test_clip_retrieval.py and tests/test_owner_asset_workflow.py. A red image ranks above a blue image for the text query 'a red square'. Gaps do not say embedding_pending.",
+    "gemma_extraction": "intelligence/gemma_adapter.py on owner-created PNGs. Red image: 'The dominant color of the rectangle is red, and the word written is RED.' Blue image: 'The dominant color of the rectangle is blue, and the word written is BLUE.' Prompt tokens 288, about 6s, peak memory 4.25 GB. Unqualified.",
+    "bayes": "tests/test_content_bayes.py. Owner-sized fit does not sample. Synthetic palette, purpose, and opening-text fits each answer a stored-draw query and a holdout evaluation with sampler_invoked false.",
+    "owner_asset_workflow": "tests/test_owner_asset_workflow.py stores a local PNG, measures palette, embeds CLIP, accepts a caption-supported purpose, recommends it at tier 1, and attaches it. Instagram policy is not consulted.",
+    "meta_probe": "sources.meta_graph.probe_media_fields on 2026-10-03. See source_use."
+  },
+  "source_use": {
+    "instagram_login_own_media": {
+      "state": "ok",
+      "username": "opalseason_",
+      "account_type": "MEDIA_CREATOR",
+      "media_type": "CAROUSEL_ALBUM",
+      "fields_present": ["caption", "id", "media_type", "media_url", "permalink"],
+      "thumbnail_url": false
+    },
+    "graph_own_media": {
+      "state": "error",
+      "code": 190,
+      "message": "Session has expired on Friday, 02-Oct-26 12:00:00 PDT."
+    },
+    "peer_media": {
+      "state": "blocked",
+      "reason": "Business Discovery is not available with the instagram_login_basic route."
+    },
+    "stored_purposes": {
+      "collect": "unresolved",
+      "store": "unresolved",
+      "display": "unresolved",
+      "descriptive_derive": "unresolved",
+      "export": "unresolved",
+      "statistical_fit": "denied",
+      "model_infer": "denied",
+      "llm_ingest": "denied"
+    },
+    "interpretation": "Unresolved is unknown, not denied. Denied purposes block statistical fit, model inference, and LLM ingest. A working own-media URL is not permission to cache or analyse Instagram media."
+  },
+  "missing_implementation": [
+    "Optional OCR and speech adapters (Tesseract, Whisper) are not installed. They are not required for the image path that was demonstrated."
+  ],
+  "source_or_data_blocked": [
+    "Peer video: renew the expired Page-linked META_ACCESS_TOKEN, then rerun probe_media_fields with a peer username.",
+    "Instagram inference and caching: set the relevant stored purposes to allowed. They are unresolved or denied today.",
+    "Gemma field qualification: a human-reviewed corpus of at least 50 posts, with ten positive and ten negative examples per field.",
+    "Retrieval nDCG: 30-50 owner-graded activity briefs before rank weights change.",
+    "Owner-data Bayesian findings: at least 50 posts from five artists, or 30 own posts, with reviewed features and 7-day public-like snapshots. Qualification still requires diagnostics and holdouts after that count."
+  ],
+  "owner_actions": [
+    "Renew a Page-linked META_ACCESS_TOKEN if peer discovery or peer video is required. Smallest check: python manage.py shell, then sources.meta_graph.probe_media_fields(peer_username).",
+    "Set Instagram purpose states to allowed before any Instagram-sourced acquisition, embedding, or multimodal inference. Do not change them merely because Instagram Login returned media_url.",
+    "Review a 50-post corpus before treating Gemma proposals as qualified labels.",
+    "Grade 30-50 activity briefs before changing inspiration-rank-v1 weights.",
+    "Collect the post and snapshot minimums above before requesting an owner-data content finding."
+  ]
+}

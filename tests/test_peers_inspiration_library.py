@@ -87,7 +87,8 @@ class PeersInspirationLibraryTests(TestCase):
     def test_dataset_builder_uses_metrics(self):
         ds = build_peer_post_dataset()
         self.assertEqual(len(ds["post_rows"]), 1)
-        self.assertEqual(ds["post_rows"][0]["response"], 12.0)
+        self.assertEqual(ds["post_rows"][0]["response"], 10.0)
+        self.assertEqual(ds["post_rows"][0]["public_comments"], 2.0)
 
     def test_dataset_honest_gap_without_metrics(self):
         PeerMedia.objects.create(

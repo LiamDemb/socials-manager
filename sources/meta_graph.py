@@ -166,6 +166,134 @@ def fetch_own_account():
     return {"state": "blocked", "reason": cfg.get("detail") or "No usable token.", "fields": {}}
 
 
+def _public_error(res) -> dict:
+    err = (res.data or {}).get("error", {}) if isinstance(getattr(res, "data", None), dict) else {}
+    message = str(err.get("message") or res.error or "")
+    for secret in (_graph_token() or "", _instagram_token() or ""):
+        if secret:
+            message = message.replace(secret, "[redacted]")
+    return {"ok": bool(res.ok), "code": err.get("code"), "type": err.get("type"), "message": message[:400]}
+
+
+def _instagram_json(path: str, token: str, params: dict) -> dict:
+    """graph.instagram.com GET. Errors are redacted; callers must not store the URL."""
+    import json
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+    query = dict(params)
+    query["access_token"] = token
+    url = f"https://graph.instagram.com/{GRAPH_VERSION}/{path.lstrip('/')}?" + urllib.parse.urlencode(query)
+    try:
+        with urllib.request.urlopen(url, timeout=30) as resp:
+            return {"ok": True, "data": json.loads(resp.read().decode())}
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", "replace")
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            data = {}
+        err = data.get("error") if isinstance(data, dict) else {}
+        message = str((err or {}).get("message") or exc.reason or "")
+        if token:
+            message = message.replace(token, "[redacted]")
+        return {"ok": False, "code": (err or {}).get("code"), "type": (err or {}).get("type"), "message": message[:400]}
+    except Exception as exc:
+        return {"ok": False, "message": f"{type(exc).__name__}: {exc}"[:400]}
+
+
+def _field_presence(item: dict) -> dict:
+    keys = ("id", "media_type", "media_url", "thumbnail_url", "permalink", "caption")
+    return {
+        "fields_present": sorted(k for k in keys if item.get(k)),
+        "media_type": item.get("media_type"),
+    }
+
+
+def _probe_instagram_login_media() -> dict:
+    token = _instagram_token()
+    if not token:
+        return {"state": "blocked", "reason": "INSTAGRAM_ACCESS_TOKEN is not set."}
+    me = _instagram_json("me", token, {"fields": "user_id,username,account_type"})
+    if not me.get("ok"):
+        return {"state": "error", "code": me.get("code"), "type": me.get("type"), "message": me.get("message")}
+    profile = me.get("data") or {}
+    user_id = profile.get("user_id") or profile.get("id")
+    if not user_id:
+        return {"state": "blocked", "reason": "Instagram Login profile did not return a user id."}
+    media = _instagram_json(
+        f"{user_id}/media",
+        token,
+        {"fields": "id,media_type,media_url,thumbnail_url,permalink,caption", "limit": "1"},
+    )
+    if not media.get("ok"):
+        return {"state": "error", "code": media.get("code"), "type": media.get("type"), "message": media.get("message")}
+    item = ((media.get("data") or {}).get("data") or [{}])[0]
+    return {
+        "state": "ok",
+        "username": profile.get("username"),
+        "account_type": profile.get("account_type"),
+        **_field_presence(item),
+    }
+
+
+def probe_media_fields(peer_username: str | None = None) -> dict:
+    """Live field probe. Records presence of asset fields, not signed URLs or tokens."""
+    cfg = inspect_configuration()
+    graph_token = _graph_token()
+    ig_id = cfg.get("instagram_business_account_id")
+    report = {
+        "graph_version": GRAPH_VERSION,
+        "auth_route": cfg.get("auth_route"),
+        "business_discovery_supported": cfg.get("business_discovery_supported"),
+        "scopes": cfg.get("scopes") or [],
+        "token_debug_ok": cfg.get("token_debug_ok"),
+        "own_media": None,
+        "instagram_login_own_media": None,
+        "peer_media": None,
+        "certified": False,
+        "caching_or_inference_authorised": False,
+    }
+    if not graph_token or not ig_id:
+        report["own_media"] = {"state": "blocked", "reason": cfg.get("detail")}
+    else:
+        own = graph_get(
+            f"{ig_id}/media",
+            graph_token,
+            {"fields": "id,media_type,media_url,thumbnail_url,permalink,caption", "limit": "1"},
+        )
+        if own.ok:
+            item = ((own.data or {}).get("data") or [{}])[0]
+            report["own_media"] = {"state": "ok", **_field_presence(item)}
+        else:
+            report["own_media"] = {"state": "error", **_public_error(own)}
+    report["instagram_login_own_media"] = _probe_instagram_login_media()
+    if not peer_username:
+        report["peer_media"] = {"state": "not_run", "reason": "No peer username was supplied."}
+    elif not cfg.get("business_discovery_supported"):
+        report["peer_media"] = {"state": "blocked", "reason": "Business Discovery is not available with this token route."}
+    elif not graph_token or not ig_id:
+        report["peer_media"] = {"state": "blocked", "reason": cfg.get("detail")}
+    else:
+        field = (
+            f"business_discovery.username({peer_username})"
+            "{media.limit(1){id,media_type,media_url,thumbnail_url,permalink,caption}}"
+        )
+        peer = graph_get(ig_id, graph_token, {"fields": field})
+        if not peer.ok:
+            report["peer_media"] = {"state": "error", "peer_username": peer_username, **_public_error(peer)}
+        else:
+            media = (((peer.data or {}).get("business_discovery") or {}).get("media") or {}).get("data") or []
+            item = media[0] if media else {}
+            report["peer_media"] = {
+                "state": "ok" if item else "empty",
+                "peer_username": peer_username,
+                **_field_presence(item),
+            }
+    return report
+
+
 def business_discovery(peer_username: str):
     cfg = inspect_configuration()
     graph_token = _graph_token()

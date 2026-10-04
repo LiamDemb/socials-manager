@@ -516,7 +516,10 @@ def execute(activity_id, expected_revision, action, idempotency_key, actual_at=N
             reason=event["reason"], recorded_at=now, idempotency_key=idempotency_key,
         )
         audit("activity", activity.pk, f"execute.{action}", {"from": prior, "to": fields["status"]}, revision=revision)
-        return {"activity_id": str(activity.pk), "revision": revision, "status": fields["status"]}
+        warnings = []
+        if action == "complete":
+            warnings.append("Measurement is not connected until a published post and mature metric snapshots exist. Completion did not create measurements.")
+        return {"activity_id": str(activity.pk), "revision": revision, "status": fields["status"], "warnings": warnings}
 
     return idempotent(idempotency_key, f"activity.execute:{activity_id}", run)
 

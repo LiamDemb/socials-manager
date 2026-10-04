@@ -331,5 +331,71 @@ class Browser(SimpleTestCase):
                     target.scroll_into_view_if_needed()
                     tb = target.bounding_box()
                     self.assertTrue(tb and 0 <= tb["y"] and tb["y"] + tb["height"] <= height + 1, f"{name} reachable")
-                    hit = target.evaluate("el => { const r = el.getBoundingClientRect(); const h = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return el === h || el.contains(h); }")
-                    self.assertTrue(hit, f"{name} is not covered by other content")
+                hit = target.evaluate("el => { const r = el.getBoundingClientRect(); const h = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return el === h || el.contains(h); }")
+                self.assertTrue(hit, f"{name} is not covered by other content")
+
+    def test_t16_reference_navigation_preserves_edits(self):
+        seed = """
+from core import clock
+from context.models import PeerMedia, PeerProfile
+peer, _ = PeerProfile.objects.get_or_create(
+    label='Stage Peer',
+    defaults={'review_state': 'reviewed', 'peer_role': 'comparable', 'created_at': clock.now(), 'reviewed_at': clock.now()},
+)
+if peer.review_state != 'reviewed':
+    peer.review_state = 'reviewed'
+    peer.peer_role = 'comparable'
+    peer.reviewed_at = clock.now()
+    peer.save()
+for i in range(12):
+    PeerMedia.objects.get_or_create(
+        peer=peer, external_id=f't16-{i}',
+        defaults={'caption': ('teaser line ' * 30), 'media_type': 'VIDEO', 'collected_at': clock.now()},
+    )
+print('SEEDED')
+"""
+        self.manage("shell", "-c", seed)
+        p = self.page
+        p.set_viewport_size({"width": 360, "height": 640})
+        p.goto(self.base + "/inspiration")
+        overflow = p.evaluate("document.documentElement.scrollWidth - window.innerWidth")
+        self.assertLessEqual(overflow, 1, "Inspiration has no horizontal overflow at 360px")
+        details_page = p.get_by_role("link", name="Details").first
+        details_page.focus()
+        expect(details_page).to_be_focused()
+        box = details_page.bounding_box()
+        self.assertIsNotNone(box)
+        self.assertLessEqual(box["y"] + box["height"], 641)
+
+        p.goto(f"{self.base}/today?d=/ui/activity/{self.ids['activity']}")
+        dialog = p.locator("#app-dialog")
+        expect(self.heading()).to_be_visible()
+        notes = dialog.locator("textarea[name=notes]")
+        notes.fill("Unsaved reference note")
+        dialog.locator("details.brief summary").click()
+        body = dialog.locator(".modal-body")
+        body.evaluate("el => { el.scrollTop = 220 }")
+        find = dialog.get_by_role("link", name="Find examples")
+        find.evaluate("el => el.focus({ preventScroll: true })")
+        expect(find).to_be_focused()
+        scroll_before = body.evaluate("el => el.scrollTop")
+        self.assertGreater(scroll_before, 0)
+        find.evaluate("el => el.click()")
+        expect(self.heading()).to_have_text("Find examples")
+        library = dialog.locator(".library-body")
+        library.focus()
+        expect(library).to_be_focused()
+        library.evaluate("el => { el.scrollTop = 400 }")
+        library_scroll = library.evaluate("el => el.scrollTop")
+        self.assertGreater(library_scroll, 0, "Library body scrolls inside the dialog")
+        dialog.get_by_role("link", name="Details").first.evaluate("el => el.click()")
+        expect(self.heading()).to_have_text("Stage Peer")
+        dialog.get_by_role("button", name="Attach").click()
+        expect(self.heading()).to_have_text("Find examples")
+        self.assertAlmostEqual(library.evaluate("el => el.scrollTop"), library_scroll, delta=30)
+        self.back_nav().click()
+        expect(self.heading()).to_have_text(LONG_TITLE)
+        expect(notes).to_have_value("Unsaved reference note")
+        self.assertAlmostEqual(body.evaluate("el => el.scrollTop"), scroll_before, delta=2)
+        expect(dialog.locator("details.brief")).to_be_visible()
+        self.assertTrue(dialog.locator("details.brief").evaluate("d => d.open"))

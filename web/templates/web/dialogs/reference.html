@@ -1,0 +1,23 @@
+<div class="frame" data-frame data-title="Reference">
+{% include "web/dialogs/_head.html" with heading=inspection.peer_label eyebrow="Reference detail" %}
+<div class="modal-body" tabindex="0">
+  <p class="meta">{{ inspection.media_type_display }} · {{ inspection.media_availability }}</p>
+  {% if inspection.media_availability == "link_only" %}
+  <p class="meta">Thumbnail or clip is not stored. Use the source link. This is not a failed player.</p>
+  {% elif inspection.media_availability == "partial" %}
+  <p class="meta">Sampled frames or a partial segment. Not a full-video analysis.</p>
+  {% elif inspection.media_availability == "evicted" %}
+  <p class="meta">The stored proxy was evicted. The source link still works.</p>
+  {% endif %}
+  <p class="wrap">{{ inspection.caption_excerpt|default:"No caption stored." }}</p>
+  {% if inspection.permalink %}<p><a href="{{ inspection.permalink }}" rel="noopener noreferrer" target="_blank">Source permalink</a></p>{% endif %}
+  <p><a href="/ui/reference/{{ inspection.peer_media_id }}/why" data-dialog-push>Why this example</a></p>
+  {% if activity_id %}
+  <form data-api="/api/activities/{{ activity_id }}/references/attach" data-after="back" class="inline">
+    <input type="hidden" name="peer_media_id" value="{{ inspection.peer_media_id }}">
+    <button class="button small" type="submit">Attach</button>
+    <p class="form-error" role="alert"></p>
+  </form>
+  {% endif %}
+</div>
+</div>

@@ -32,6 +32,7 @@
     <li class="card ref-card">
       <p class="meta">{{ c.peer_label }} · {{ c.media_type_display }}{% if c.published_at %} · {{ c.published_at|slice:":10" }}{% endif %}</p>
       <p class="wrap">{% if c.caption_excerpt %}{{ c.caption_excerpt }}{% else %}<span class="meta">No caption stored.</span>{% endif %}</p>
+      <p><a href="/inspiration/posts/{{ c.id }}">Details</a></p>
       {% if c.permalink %}<p><a href="{{ c.permalink }}" rel="noopener noreferrer" target="_blank">Source permalink</a></p>{% endif %}
       {% if c.metrics.public_likes is not None %}<p class="meta">Public likes at capture: {{ c.metrics.public_likes }}{% if c.metrics.public_comments is not None %}; comments: {{ c.metrics.public_comments }}{% endif %}. Not performance proof.</p>{% endif %}
       <form data-api="/api/inspiration/save" data-after="reload" class="inline">

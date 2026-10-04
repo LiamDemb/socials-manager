@@ -8,7 +8,7 @@ from core.errors import DomainError
 from core.services import audit
 
 from .library import media_card
-from .models import ActivityReference, InspirationReference, PeerMedia
+from .models import ActivityReference, InspirationReference, PeerMedia, RecommendationExposure
 
 HTTP_URL = re.compile(r"^https?://", re.I)
 
@@ -97,6 +97,13 @@ def attach_reference(activity_id, reference_id, origin="owner_attach", note=""):
     if not created:
         raise DomainError("already_attached", "This reference is already on the activity.")
     audit("activity", activity.pk, "attach_reference", {"reference": str(ref.pk), "origin": origin})
+    RecommendationExposure.objects.create(
+        reference=ref,
+        peer_media=ref.peer_media,
+        event="attached",
+        note=origin[:200],
+        created_at=clock.now(),
+    )
     return link
 
 

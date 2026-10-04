@@ -212,9 +212,13 @@ def settings_page(request):
         for metric in MetricDefinition.objects.filter(kind="flow", pk__in=Observation.objects.filter(entity=entity).values("metric_id")):
             gates.append({"entity": entity, "metric": metric, "report": gate_report(entity, metric.pk)})
     objects = PromotedObject.objects.select_related("entity").order_by("kind", "entity__label")
+    from context.media_capability import provider_capability_report
+    from context.media_storage import usage_report
+
     return page(request, "web/settings.html", "settings", "Settings", artist_ids=active_identities(artist.entity) if artist else [],
                 objects=objects, backups=list_backups()[:10], diag=diagnostics.report(), gates=gates,
-                ledger=availability_ledger(20), forecasts=ForecastRecord.objects.order_by("-issued_at")[:20])
+                ledger=availability_ledger(20), forecasts=ForecastRecord.objects.order_by("-issued_at")[:20],
+                media_usage=usage_report(), media_capability=provider_capability_report())
 
 
 @require_GET
@@ -344,6 +348,85 @@ def ui_library(request):
         q=q,
         peer_filter=peer_id,
     )
+
+
+@require_GET
+def reference_detail(request, post_id):
+    from context.media_inspect import inspect_peer_media
+    from context.models import MediaAsset, PeerMedia
+
+    media = get_object_or_404(PeerMedia.objects.select_related("peer"), pk=post_id)
+    assets = MediaAsset.objects.filter(post=media).order_by("role", "captured_at")
+    return page(
+        request,
+        "web/reference_detail.html",
+        "inspiration",
+        media.peer.label,
+        media=media,
+        inspection=inspect_peer_media(media.pk),
+        assets=assets,
+    )
+
+
+@require_GET
+def review_content(request):
+    from context.models import ContentFeatureValue
+
+    rows = (
+        ContentFeatureValue.objects.filter(review_state="suggested")
+        .select_related("post", "post__peer")
+        .order_by("-created_at")[:100]
+    )
+    return page(request, "web/review_content.html", "inspiration", "Review content", rows=rows)
+
+
+@require_GET
+def ui_media_detail(request, post_id):
+    from context.media_inspect import inspect_peer_media
+
+    return fragment(
+        request,
+        "web/dialogs/reference.html",
+        inspection=inspect_peer_media(post_id),
+        activity_id=request.GET.get("activity") or "",
+    )
+
+
+@require_GET
+def ui_why_reference(request, post_id):
+    from context.models import PeerMedia
+    from intelligence.response_support import performance_adjustment
+
+    media = get_object_or_404(PeerMedia.objects.select_related("peer"), pk=post_id)
+    adjustment, reason, pathway = performance_adjustment({"id": str(media.pk)})
+    return fragment(
+        request,
+        "web/dialogs/why_reference.html",
+        fit=[f"{media.peer.label} · {media.media_type or 'post'}"],
+        response=reason,
+        association="No qualified content association is attached to this card.",
+        adaptation="",
+        gaps=[] if adjustment else [reason],
+        pathway=pathway,
+    )
+
+
+@require_GET
+def media_asset(request, asset_id):
+    from django.http import FileResponse
+
+    from context.models import MediaAsset
+    from core.paths import safe_path
+
+    asset = get_object_or_404(MediaAsset, pk=asset_id)
+    if not asset.relative_path:
+        raise Http404
+    path = safe_path(asset.relative_path)
+    if not path.is_file():
+        return HttpResponse("This derivative was evicted or is not on disk.", status=404, content_type="text/plain")
+    response = FileResponse(path.open("rb"), content_type=asset.mime_type or "application/octet-stream")
+    response["Accept-Ranges"] = "bytes"
+    return response
 
 
 @require_GET
